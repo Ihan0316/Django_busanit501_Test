@@ -1,0 +1,14 @@
+파이참 프로페셜널 , 프로젝트 만들면,
+
+따로 django 설치 할 필요가 없고, -> pip install django
+따로 config 설정도 할 필요가 없음. 기본으로 다 설정해줌.
+-> django-admin startproject config .
+
+ django-admin --version
+
+실행 명령어 : python manage.py runserver
+버튼 시작하기.
+=================================================
+View 작업하기.  -> 스프링으로 컨트롤러 역할이다.
+
+프로젝트이름/views.py  , 파일 생성.
