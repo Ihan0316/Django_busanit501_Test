@@ -12,3 +12,48 @@
 View 작업하기.  -> 스프링으로 컨트롤러 역할이다.
 
 프로젝트이름/views.py  , 파일 생성.
+
+from django.http import HttpResponse
+
+def main(request):
+    return HttpResponse("안녕하세요. 장고 웹 프레임워크~~ Hello World")
+
+
+urls.py 에 가서,
+추가.
+from helloworld.views import main
+
+urlpatterns = [
+    #    path('admin/', admin.site.urls),
+    path("",main)
+]
+
+실행하기
+
+
+Template, html 파일을 제공.
+
+templates 폴더에,
+main.html,
+lunch_list.html
+파일 2개 생성.
+간단히, h1 태그로 식별만 하기.
+
+화면 설정.
+프로젝트이름/settings.py
+
+TEMPLATES_DIR = BASE_DIR / 'templates'
+
+설정 후,
+
+프로젝트이름/views
+
+리턴 형식을 html 렌더링 구조로 변경.
+def main(request):
+    # return HttpResponse("안녕하세요. 장고 웹 프레임워크~~ Hello World")
+    return render(request, "main.html")
+
+def lunch_list(request):
+    # return HttpResponse("lunch_list : 점심 메뉴입니다.")
+    return render(request, "lunch_list.html")
+

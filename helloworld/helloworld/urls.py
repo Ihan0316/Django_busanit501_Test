@@ -17,9 +17,11 @@ Including another URLconf
 # from django.contrib import admin
 from django.urls import path
 
-from helloworld.views import main
+from helloworld.views import main, lunch_list, intro
 
 urlpatterns = [
     #    path('admin/', admin.site.urls),
-    path("",main)
+    path("",main),
+    path("lunch_list/",lunch_list),
+    path("intro/",intro)
 ]
