@@ -1,0 +1,24 @@
+Django의 디자인 패턴
+
+모델-템플릿-뷰 (Model-Template-View)
+
+1) Model
+데이터베이스 연결시켜주는 코드.
+각각 모델이 데이터베이스 테이블과 매핑됨.
+
+- 모든 Model 클래스는 django.db.models.Model 클래스를 상속 받음.
+- 각각의 모델 속성은 데이터베이스 필드로 사용이 됨.
+
+예시)
+class DjangoModel(models.Model):
+	name = models.CharField("이름")
+
+2) Template
+html 화면.
+
+3) View
+스프링으로 보면, 컨트롤러 역할임.
+
+예시)
+def django_view(request):
+	return HttpResponse("Django View")
