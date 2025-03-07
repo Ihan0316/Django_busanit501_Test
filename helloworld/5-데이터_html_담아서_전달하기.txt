@@ -39,7 +39,29 @@ for burger in burgers:
 	print(burger.id, burger.name, burger.price, burger.calories)
 
 
+5.
+프로젝이름/views.py
 
+def burger_list(request):
+    burgers = Burger.objects.all()
+    print("햄버거 전체 목록: ", burgers)
+    return render(request, "burger_list.html")
+
+6.
+templates 폴더 파일 만들기.
+burger_list.html
+
+내용은 간단히.
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>burger_list</title>
+</head>
+<body>
+<h1>햄버거 목록</h1>
+</body>
+</html>
 
 
 
