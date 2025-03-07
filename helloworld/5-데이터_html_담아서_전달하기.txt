@@ -14,7 +14,7 @@ python manage.py shell
 from burgers.models import Burger
 Burger.objects.all()
 
-3 조건에 맞는 요소 가져오기
+3 조건에 맞는 요소 가져오기(하나만 가져오기)
 from burgers.models import Burger
 Burger.objects.get(name="더블와퍼")
 burger = Burger.objects.get(name="더블와퍼")
@@ -25,6 +25,18 @@ burger.name
 burger.price
 burger.calories
 
+4 특정 조건 여러 객체를 가져오기.
+
+from burgers.models import Burger
+burgers = Burger.objects.filter(name__endswith="와퍼")
+burgers
+type(burgers)
+
+burgers[0]
+burgers[1]
+
+for burger in burgers:
+	print(burger.id, burger.name, burger.price, burger.calories)
 
 
 
