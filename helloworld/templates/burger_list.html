@@ -6,6 +6,11 @@
 </head>
 <body>
 <h1>햄버거 목록</h1>
-<div>{{ burgers  }}</div>
+{#<div>{{ burgers  }}</div>#}
+{%  for burger in burgers %}
+    <div>햄버거 이름 : {{ burger.name }}</div>
+    <div>햄버거 가격 : {{ burger.price }}</div>
+    <div>햄버거 칼로리 : {{ burger.calories }}</div>
+{% endfor %}
 </body>
 </html>
