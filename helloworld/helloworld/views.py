@@ -18,7 +18,12 @@ def intro(request):
 def burger_list(request):
     burgers = Burger.objects.all()
     print("햄버거 전체 목록: ", burgers)
-    return render(request, "burger_list.html")
+    # 화면에 데이터 탑재하기.
+    context = {
+        "burgers": burgers
+    }
+    # 화면에 데이터 전달하기.
+    return render(request, "burger_list.html", context)
 
 
 

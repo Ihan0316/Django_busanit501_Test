@@ -63,6 +63,34 @@ burger_list.html
 </body>
 </html>
 
+7.
+프로젝이름/urls.py
+라우팅
+urlpatterns = [
+  ...
+  path("list/",burger_list)
+  ...
+
+8.
+화면에 데이터 전달.
+def burger_list(request):
+    burgers = Burger.objects.all()
+    print("햄버거 전체 목록: ", burgers)
+    # 화면에 데이터 탑재하기.
+    context = {
+        "burgers": burgers
+    }
+    # 화면에 데이터 전달하기.
+    return render(request, "burger_list.html", context)
+
+
+9.
+화면 구성 전에,
+화면에 데이터 유효성 체크, 데이터를 잘 가져 왔는지 유무 확인.
+burger_list.html
+<h1>햄버거 목록</h1>
+<div>{{ burgers  }}</div>
+
 
 
 
