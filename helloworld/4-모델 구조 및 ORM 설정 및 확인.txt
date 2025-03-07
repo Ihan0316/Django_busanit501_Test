@@ -88,3 +88,5 @@ class BurgerAdmin(admin.ModelAdmin):
 
 2
 관리자 계정 만들기.
+python manage.py createsuperuser
+
