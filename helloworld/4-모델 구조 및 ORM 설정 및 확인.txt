@@ -50,3 +50,30 @@ python manage.py makemigrations burgers
 
 3
 python manage.py migrate burgers
+
+
+장고의 좋은 기능인, 관리자 기능 확인 해보기.
+
+주의)
+프로젝트 생성시, 관리자 체크를 하면, 바로 사용하면됨.
+만약, 체크를 못했다면,
+따로 , 설정.
+
+프로젝이름/settings.py
+'django.contrib.admin' 추가
+INSTALLED_APPS = [
+    'burgers',
+    'django.contrib.admin',
+
+
+순서
+1.
+burgers/admin.py
+
+# Register your models here.
+@admin.register(Burger)
+class BurgerAdmin(admin.ModelAdmin):
+    pass
+
+2
+관리자 계정 만들기.
