@@ -1,0 +1,24 @@
+전체 데이터를 가져와서, 화면에 출력 해보기.
+
+ORM 에서, 데이터를 가져오는 테스트.
+
+스프링으로 치면, 레포지토리 역할과 비슷.
+
+터미널 -> 쉘에 접근해서 테스팅 해야함.
+
+순서
+1
+python manage.py shell
+
+2 전체 버거 가져오기.
+from burgers.models import Burger
+Burger.objects.all()
+
+
+
+
+
+
+
+
+
