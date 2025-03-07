@@ -18,11 +18,12 @@ from django.contrib import admin
 # from django.contrib import admin
 from django.urls import path
 
-from helloworld.views import main, lunch_list, intro
+from helloworld.views import main, lunch_list, intro, burger_list
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path("",main),
     path("lunch_list/",lunch_list),
-    path("intro/",intro)
+    path("intro/",intro),
+    path("list/",burger_list)
 ]
