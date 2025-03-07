@@ -90,3 +90,26 @@ class BurgerAdmin(admin.ModelAdmin):
 관리자 계정 만들기.
 python manage.py createsuperuser
 
+3.
+http://localhost:8000/admin
+최초 접속시 , 만약 , 경고 발생하면,
+python manage.py migrate
+후에 다시 접속하기.
+
+==========================================
+관리자 페이지에서, 버거 등록 해보기.
+gui 데이터 입력 후, 저장 버튼 클릭.
+
+리스트에 , 해당 버거의 속성 이름으로 표시 해보기.
+
+burgers/models.py 에서, 추가하기.
+def __str__(self):
+        return self.name
+
+class Burger(models.Model):
+    name = models.CharField(max_length=100)
+    price = models.IntegerField(default=0)
+    calories = models.IntegerField(default=0)
+
+    def __str__(self):
+        return self.name
