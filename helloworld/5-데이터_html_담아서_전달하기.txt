@@ -14,6 +14,16 @@ python manage.py shell
 from burgers.models import Burger
 Burger.objects.all()
 
+3 조건에 맞는 요소 가져오기
+from burgers.models import Burger
+Burger.objects.get(name="더블와퍼")
+burger = Burger.objects.get(name="더블와퍼")
+
+각 속성의 값 확인.
+burger.id
+burger.name
+burger.price
+burger.calories
 
 
 
