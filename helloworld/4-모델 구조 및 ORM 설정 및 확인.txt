@@ -26,3 +26,19 @@ class Burger(models.Model):
     name = models.CharField(max_length=100)
     price = models.IntegerField(default=0)
     calories = models.IntegerField(default=0)
+
+
+모델 생성 후, 또는 변경이 발생시, 아래의
+마이그레이션 작업을 해야한다.
+
+데이터베이스 마이그레이션 작업 ,
+
+순서
+1
+python manage.py migrate
+
+2
+python manage.py makemigrations burgers
+
+3
+python manage.py migrate burgers
