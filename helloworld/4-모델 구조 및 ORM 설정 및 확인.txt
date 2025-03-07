@@ -70,7 +70,7 @@ INSTALLED_APPS = [
 2
 라우팅 확인.
 프로젝이름/urls.py
-from django.contrib.auth import admin
+from django.contrib import admin
 
 urlpatterns = [
     path('admin/', admin.site.urls),
