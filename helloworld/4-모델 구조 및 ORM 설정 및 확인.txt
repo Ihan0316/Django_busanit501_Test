@@ -59,11 +59,22 @@ python manage.py migrate burgers
 만약, 체크를 못했다면,
 따로 , 설정.
 
+설정
+1
 프로젝이름/settings.py
 'django.contrib.admin' 추가
 INSTALLED_APPS = [
     'burgers',
     'django.contrib.admin',
+
+2
+라우팅 확인.
+프로젝이름/urls.py
+from django.contrib.auth import admin
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+
 
 
 순서
