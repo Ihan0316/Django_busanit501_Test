@@ -6,5 +6,13 @@
 </head>
 <body>
 <h1>burger_search 검색 화면</h1>
+<h2>검색 결과</h2>
+{#<div>{{ burgers }}</div>#}
+{% for burger in burgers %}
+    <div>
+        {{ burger.name }} (가격: {{ burger.price }}원,
+    칼로리: {{ burger.calories }} kcal)
+    </div>
+{% endfor %}
 </body>
 </html>

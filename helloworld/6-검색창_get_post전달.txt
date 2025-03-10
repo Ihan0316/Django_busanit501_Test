@@ -96,3 +96,23 @@ def burger_search(request):
     return render(request, "burger_search.html",context)
 
 
+9
+단순 화면에서 확인.
+burger_search.html
+
+<h1>burger_search 검색 화면</h1>
+<h2>검색 결과</h2>
+<div>{{ burgers }}</div>
+
+
+10
+반복문으로 처리 해주기.
+<h2>검색 결과</h2>
+{#<div>{{ burgers }}</div>#}
+{% for burger in burgers %}
+    <div>
+        {{ burger.name }} (가격: {{ burger.price }}원,
+    칼로리: {{ burger.calories }} kcal)
+    </div>
+{% endfor %}
+</body>
