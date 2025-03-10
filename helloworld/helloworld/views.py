@@ -26,7 +26,8 @@ def burger_list(request):
     return render(request, "burger_list.html", context)
 
 def burger_search(request):
-	return render(request, "burger_search.html")
+    print(request.GET)
+    return render(request, "burger_search.html")
 
 
 

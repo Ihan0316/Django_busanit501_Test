@@ -40,8 +40,21 @@ urlpatterns = [
     ...
     path("search/",burger_search),
 
+4
+확인.
+장고 서버 켜고, url,
+http://localhost:8000/search/
 
 
+5
+화면 -> 서버 , get으로 검색어 받아보기.
+예시)
+http://localhost:8000/search?keyword=더블
 
+프로젝트명/views.py
 
+def burger_search(request):
+    print(request.GET)
+    return render(request, "burger_search.html")
 
+콘솔에서, keyword = 더블 확인 해보기
