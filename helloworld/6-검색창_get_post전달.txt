@@ -68,3 +68,31 @@ def burger_search(request):
     burgers = Burger.objects.filter(name__contains=keyword)
     print("조회된 내용 : ",burgers)
     return render(request, "burger_search.html")
+
+7
+확인.
+http://127.0.0.1:8000/search/?keyword=와퍼
+
+서버 콘솔에서,
+와퍼
+조회된 내용 :  <QuerySet [<Burger: 더블와퍼>, <Burger: 새우와퍼>]>
+
+8
+서버 -> 화면으로 , 조회된 결과 데이터 전달.
+
+def burger_search(request):
+    # print(request.GET)
+    keyword = request.GET.get("keyword")
+    print(keyword)
+
+    # 검색어 이용해서, DB에서 데이터 검색하기.
+    burgers = Burger.objects.filter(name__contains=keyword)
+
+    # 서버 -> 화면으로 전달
+    context = {
+        "burgers": burgers
+    }
+    print("조회된 내용 : ",burgers)
+    return render(request, "burger_search.html",context)
+
+

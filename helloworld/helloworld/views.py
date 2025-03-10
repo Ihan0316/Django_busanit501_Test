@@ -32,8 +32,13 @@ def burger_search(request):
 
     # 검색어 이용해서, DB에서 데이터 검색하기.
     burgers = Burger.objects.filter(name__contains=keyword)
+
+    # 서버 -> 화면으로 전달
+    context = {
+        "burgers": burgers
+    }
     print("조회된 내용 : ",burgers)
-    return render(request, "burger_search.html")
+    return render(request, "burger_search.html",context)
 
 
 
