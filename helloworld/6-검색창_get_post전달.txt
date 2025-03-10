@@ -1,0 +1,18 @@
+장고,
+기본 디자인 패턴,
+MVT,
+Model, Views, Templates
+
+검색창을 화면에서 간단히 구성후,
+화면에서 -> 검색어 -> 장고 -> URL -> Views
+-> DB 검색어 이용해서 검색한 결과 -> 화면 반환
+
+1.
+Views 작성,
+프로젝트면/views.py
+
+def burger_search(request):
+	return render(request, "burger_search.html")
+
+
+
