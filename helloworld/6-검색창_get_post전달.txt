@@ -57,4 +57,14 @@ def burger_search(request):
     print(request.GET)
     return render(request, "burger_search.html")
 
-콘솔에서, keyword = 더블 확인 해보기
+6
+서버에서, 검색어로 디비에서 조회 해보기.
+def burger_search(request):
+    # print(request.GET)
+    keyword = request.GET.get("keyword")
+    print(keyword)
+
+    # 검색어 이용해서, DB에서 데이터 검색하기.
+    burgers = Burger.objects.filter(name__contains=keyword)
+    print("조회된 내용 : ",burgers)
+    return render(request, "burger_search.html")
