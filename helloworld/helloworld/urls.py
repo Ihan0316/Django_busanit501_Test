@@ -26,6 +26,6 @@ urlpatterns = [
     path("lunch_list/",lunch_list),
     path("intro/",intro),
     path("list/",burger_list),
-    path("serarch/",burger_search),
+    path("search/",burger_search),
 
 ]

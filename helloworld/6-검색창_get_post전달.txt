@@ -38,7 +38,7 @@ from helloworld.views import burger_search
 
 urlpatterns = [
     ...
-    path("serarch/",burger_search),
+    path("search/",burger_search),
 
 
 
