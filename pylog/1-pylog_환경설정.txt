@@ -1,0 +1,57 @@
+pylog , pycharm 프로젝트 
+
+- 새프로젝트 생성, 이름 : pylog qwe
+
+- pwd , 현재 위치 확인. 
+
+- Django 설치 
+- pip install 'django<5'6
+
+- 프로젝트 구조 생성
+- django-admin startproject config .
+
+- TEMPLATES_DIR 설정 
+- config/settings.py 
+- 17라인, 추가
+- TEMPLATES_DIR = BASE_DIR / 'templates'
+- 58라인, 수정
+- 'DIRS': [TEMPLATES_DIR],
+
+- templates 디렉터리 생성 
+
+- 인덱스 페이지 구성 
+- config/views.py , 새로생성
+- 내용
+from django.shortcuts import render
+
+def index(request):
+    return render(request, 'index.html')
+	
+- URLconf , config/urls.py 
+- 추가 
+1)
+from config.views import index
+2)
+path('', index),
+ 
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('', index),
+]
+
+- Template, templates/index.html 새로생성
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>index</title>
+</head>
+<body>
+    <h1>pylog</h1>
+</body>
+</html>
+
+- 서버 실행 
+python manage.py runserver
+
+
