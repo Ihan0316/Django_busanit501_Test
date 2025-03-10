@@ -9,10 +9,39 @@ Model, Views, Templates
 
 1.
 Views 작성,
-프로젝트면/views.py
+프로젝트명/views.py
 
 def burger_search(request):
 	return render(request, "burger_search.html")
+
+2
+html 화면 구성.
+templates  폴더
+burger_search.html
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>burger_search 검색</title>
+</head>
+<body>
+<h1>burger_search 검색 화면</h1>
+</body>
+</html>
+
+3
+라우팅 연결,
+프로젝트명/urls.py
+
+from helloworld.views import burger_search
+
+urlpatterns = [
+    ...
+    path("serarch/",burger_search),
+
+
+
 
 
 

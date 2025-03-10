@@ -25,5 +25,8 @@ def burger_list(request):
     # 화면에 데이터 전달하기.
     return render(request, "burger_list.html", context)
 
+def burger_search(request):
+	return render(request, "burger_search.html")
+
 
 
