@@ -92,5 +92,17 @@ burger_list.html
 <div>{{ burgers  }}</div>
 
 
+10.
+EL  표기법처럼, 변수 값 읽을 때, {{변수명}}
+코드 작성시, {% %} , 표기함.
+반복문으로 , 해당 버거들의 속성 표기 하기.
 
-
+<body>
+<h1>햄버거 목록</h1>
+{#<div>{{ burgers  }}</div>#}
+{%  for burger in burgers %}
+    <div>햄버거 이름 : {{ burger.name }}</div>
+    <div>햄버거 가격 : {{ burger.price }}</div>
+    <div>햄버거 칼로리 : {{ burger.calories }}</div>
+{% endfor %}
+</body>
