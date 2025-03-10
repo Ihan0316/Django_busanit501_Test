@@ -116,3 +116,27 @@ burger_search.html
     </div>
 {% endfor %}
 </body>
+
+11
+검색어가 없는 경우는, 디비에서 none 처리하기.
+기본 유효성 체크.
+프로젝트명/views.py
+
+def burger_search(request):
+    # print(request.GET)
+    keyword = request.GET.get("keyword")
+    print(keyword)
+
+    # 유효성 체크, keyword 값이 주어진 경우에만 조회하기.
+    if keyword is not None:
+        # 검색어 이용해서, DB에서 데이터 검색하기.
+        burgers = Burger.objects.filter(name__contains=keyword)
+    else:
+        # 검색어가 없는 경우.
+        burgers = Burger.objects.none()
+    # 서버 -> 화면으로 전달
+    context = {
+        "burgers": burgers
+    }
+    print("조회된 내용 : ",burgers)
+    return render(request, "burger_search.html",context)

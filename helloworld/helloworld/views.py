@@ -30,9 +30,13 @@ def burger_search(request):
     keyword = request.GET.get("keyword")
     print(keyword)
 
-    # 검색어 이용해서, DB에서 데이터 검색하기.
-    burgers = Burger.objects.filter(name__contains=keyword)
-
+    # 유효성 체크, keyword 값이 주어진 경우에만 조회하기.
+    if keyword is not None:
+        # 검색어 이용해서, DB에서 데이터 검색하기.
+        burgers = Burger.objects.filter(name__contains=keyword)
+    else:
+        # 검색어가 없는 경우.
+        burgers = Burger.objects.none()
     # 서버 -> 화면으로 전달
     context = {
         "burgers": burgers
