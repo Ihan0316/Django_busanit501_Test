@@ -1,13 +1,13 @@
 pylog , pycharm 프로젝트 
 
-- 새프로젝트 생성, 이름 : pylog qwe
+- 새프로젝트 생성, 이름 : pylog
 
 - pwd , 현재 위치 확인. 
 
-- Django 설치 
+- Django 설치 , 이미 설치
 - pip install 'django<5'6
 
-- 프로젝트 구조 생성
+- 프로젝트 구조 생성, 이미 설치 config 대신에 -> 프로젝트명 변경되어 있음.
 - django-admin startproject config .
 
 - TEMPLATES_DIR 설정 
@@ -20,14 +20,14 @@ pylog , pycharm 프로젝트
 - templates 디렉터리 생성 
 
 - 인덱스 페이지 구성 
-- config/views.py , 새로생성
+- 프로젝트명/views.py , 새로생성
 - 내용
 from django.shortcuts import render
 
 def index(request):
     return render(request, 'index.html')
 	
-- URLconf , config/urls.py 
+- URLconf , 프로젝트명/urls.py
 - 추가 
 1)
 from config.views import index
@@ -51,7 +51,7 @@ urlpatterns = [
 </body>
 </html>
 
-- 서버 실행 
+- 서버 실행 -> 서버 시작 버튼 클릭으로 대체.
 python manage.py runserver
 
 
