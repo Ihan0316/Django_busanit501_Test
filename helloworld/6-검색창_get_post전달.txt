@@ -140,3 +140,29 @@ def burger_search(request):
     }
     print("조회된 내용 : ",burgers)
     return render(request, "burger_search.html",context)
+
+12
+화면, 검색창 추가.
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>burger_search 검색</title>
+</head>
+<body>
+<h1>burger_search 검색 화면</h1>
+<h2>검색 결과</h2>
+{#<div>{{ burgers }}</div>#}
+<form method="get">
+    <input type="text" name="keyword">
+    <button type="submit">검색</button>
+</form>
+{% for burger in burgers %}
+    <div>
+        {{ burger.name }} (가격: {{ burger.price }}원,
+    칼로리: {{ burger.calories }} kcal)
+    </div>
+{% endfor %}
+</body>
+</html>

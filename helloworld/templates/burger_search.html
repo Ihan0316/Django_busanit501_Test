@@ -8,6 +8,10 @@
 <h1>burger_search 검색 화면</h1>
 <h2>검색 결과</h2>
 {#<div>{{ burgers }}</div>#}
+<form method="get">
+    <input type="text" name="keyword">
+    <button type="submit">검색</button>
+</form>
 {% for burger in burgers %}
     <div>
         {{ burger.name }} (가격: {{ burger.price }}원,
