@@ -48,6 +48,45 @@ templates/post_list.html
 </html>
 
 
+4
+연결 확인.
+http://localhost:8000/posts/
 
+5
+화면에 View에서 DB로 부터 받아온 데이터를 전달하기.
 
+blog/views.py
 
+def post_list(request):
+    posts = Post.objects.all()
+    context = {
+        'posts': posts,
+    }
+    return render(request,"post_list.html",context)
+
+6
+화면에서 데이터를 이용해서 출력해주기.
+templates/post_list.html
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>post_list</title>
+</head>
+<body>
+<h1>post_list</h1>
+    <ul>
+        {% for post in posts %}
+            <li>
+                <h2>{{ post.title }}</h2>
+                <p>{{ post.content }}</p>
+            </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
+
+7
+확인.
+http://localhost:8000/posts/
