@@ -174,10 +174,12 @@ templates/post_list.html
             <li>
                 <h2>{{ post.title }}</h2>
                 <p>{{ post.content }}</p>
-              <ul>
+             <ul>
                 {% for comment in post.comment_set.all %}
                     <li>{{ comment.content }}</li>
-                    {% endfor %}
+                    {% empty %}
+                    <li>아직 댓글이 없습니다.</li>
+                {% endfor %}
             </ul>
             </li>
         {% endfor %}
