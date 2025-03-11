@@ -7,3 +7,47 @@
 4. View, URL, 템플릿 연결 확인.
 5. View에서 ORM을 이용해서 모든 글을 가져와 템플릿 전달.
 6. 템플릿의 View에서 전달받은 내용을 표시.
+
+================================================
+
+1
+View 작성,
+blog/views.py 에서.
+
+from django.shortcuts import render
+
+# Create your views here.
+def post_list(request):
+    return render(request,"post_list.html")
+
+2
+URLconf 작업.
+프로젝트명/urls.py  에서
+
+from blog.views import post_list
+
+urlpatterns = [
+	...
+    path('posts/', post_list),
+
+]
+
+3
+템플릿 작성,
+templates/post_list.html
+기본만 표기하기. 페이지 인식.
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>post_list</title>
+</head>
+<body>
+<h1>post_list</h1>
+</body>
+</html>
+
+
+
+
+
