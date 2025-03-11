@@ -1,0 +1,4 @@
+1:N 관계 모델 구현,
+
+- 새 app 생성, settings 에 등록
+python manage.py startapp blog
