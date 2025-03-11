@@ -124,3 +124,63 @@ post = Post.objects.first()
 post.comment_set
 post.comment_set.all()
 
+
+9
+모델의 관계를 분석하고, 참조하는 방법 연습 했고,
+실제 화면에 출력해보기.
+
+templates/post_list.html
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>post_list</title>
+</head>
+<body>
+<h1>post_list</h1>
+    <ul>
+        {% for post in posts %}
+            <li>
+                <h2>{{ post.title }}</h2>
+                <p>{{ post.content }}</p>
+            <div>{{ post.comment_set.all }}</div>
+            </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
+
+
+10
+단순 출력해서, 필요한 속성만 출력 해보기.
+
+
+
+templates/post_list.html
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>post_list</title>
+</head>
+<body>
+<h1>post_list</h1>
+    <ul>
+        {% for post in posts %}
+            <li>
+                <h2>{{ post.title }}</h2>
+                <p>{{ post.content }}</p>
+              <ul>
+                {% for comment in post.comment_set.all %}
+                    <li>{{ comment.content }}</li>
+                    {% endfor %}
+            </ul>
+            </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
