@@ -34,5 +34,15 @@ class Comment(models.Model):
     def __str__(self):
         return f"{self.post.title}의 댓글 ID:{self.id}"
 
+4
+모델의 변경사항이 발생시, 항상 해야할 마이그레이션 작업.
+
+데이터베이스 변경사항 생성
+python manage.py makemigrations
+
+생성되어 있는 데이터베이스 변경사항 적용.
+python manage.py migrate
+
+
 
 
