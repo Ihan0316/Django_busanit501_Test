@@ -66,4 +66,16 @@ class PostAdmin(admin.ModelAdmin):
 관리자 계정 생성.
 python manage.py createsuperuser
 
+8
+확인.
+http://localhost:8000/admin/
+로그인 하기.
 
+9
+blog/admin.py 에서.
+댓글 추가하기.
+
+...
+@admin.register(Comment)
+class CommentAdmin(admin.ModelAdmin):
+    pass
