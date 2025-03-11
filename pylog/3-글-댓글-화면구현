@@ -110,3 +110,17 @@ first_comment = Comment.objects.first()
 
 first_comment.post
 
+자식 -> 부모 방향으로 객체에 접근, 정방향 관계,
+
+부모 -> 자식 방향으로 객체에 접근, 역방향 관계
+장고에서, 자동으로 생성을 해주는데,
+{N방향 모델명의 소문자화)_set  이름으로 ORM 자동으로 생성.
+
+예)
+comment_set 이름으로 ,
+부모 -> 자식으로 객체를 참조 가능.
+
+post = Post.objects.first()
+post.comment_set
+post.comment_set.all()
+
