@@ -90,3 +90,23 @@ templates/post_list.html
 7
 확인.
 http://localhost:8000/posts/
+
+
+8
+댓글 출력 해보기.
+
+장고, ORM을 이용해서, 1:N 객체 접근.
+
+댓글 모델 내부에, 부모의 객체를 참조를 할수 있음.
+class Comment(models.Model):
+    post = models.ForeignKey(Post, on_delete=models.CASCADE)
+
+쉘에서, 접근 연습 해보기.
+
+python manage.py shell
+
+from blog.models import Post, Comment
+first_comment = Comment.objects.first()
+
+first_comment.post
+
