@@ -1,0 +1,234 @@
+5 유저가 업로드 하는 정적파일
+
+- config/settings.py
+
+MEDIA_URL = 'media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+업로드시 media 디렉터리에 업로드 함.
+자동 생성됨. 업로드 시점에.
+
+
+- 정적파일을 저장하는 필드 추가.
+- blog/models.py
+
+추가
+thumbnail = models.ImageField("썸네일 이미지", upload_to="post", blank=True)
+
+upload_to="post": 이미지가 업로드될 경로 지정
+MEDIA_ROOT/post/ 폴더에 이미지 저장
+
+예시)
+class Post(models.Model):
+    title = models.CharField("포스트 제목",max_length=100)
+    content = models.TextField("포스트 내용")
+    thumbnail = models.ImageField("썸네일 이미지", upload_to="post", blank=True)
+
+- 디비 변경사항이 생겨서, makemigrations 명령어 사용하기
+- python manage.py makemigrations
+
+오류 발생. 설치 필요
+
+- pip install 'Pillow<10'
+
+다시,
+
+- python manage.py makemigrations
+
+- 변경사항을 담은 migration 이 생성되었고,
+- migrate 명령어로 변경사항 DB에 적용
+- python manage.py migrate
+
+- 서버 재시작
+
+- 확인.
+- Django admin에서 확인.
+http://127.0.0.1:8000/admin/
+
+-BLOG -> Posts -> ADD POST
+- 사진 선택됨.
+
+프로젝트 폴더 -> media/post -> 이미지 파일 있음.
+
+
+
+- Django admin에서 해당 사진 클릭시 오류 발생
+
+
+
+- MEDIA_URL 과 업로드 파일 연결
+- config/urls.py
+
+추가
+from django.conf import settings
+from django.conf.urls.static import static
+추가
+urlpatterns += static(
+    # URL의 접두어가 MEDIA_URL 일 때는 정적파일을 돌려준다.
+    prefix=settings.MEDIA_URL,
+    # 돌려줄 디렉터리는 MEDIA_ROOT 를 기준으로 한다.
+    document_root=settings.MEDIA_ROOT
+)
+예시
+"""
+URL configuration for config project.
+
+The `urlpatterns` list routes URLs to views. For more information please see:
+    https://docs.djangoproject.com/en/4.2/topics/http/urls/
+Examples:
+Function views
+    1. Add an import:  from my_app import views
+    2. Add a URL to urlpatterns:  path('', views.home, name='home')
+Class-based views
+    1. Add an import:  from other_app.views import Home
+    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
+Including another URLconf
+    1. Import the include() function: from django.urls import include, path
+    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
+"""
+
+from django.conf import settings
+from django.conf.urls.static import static
+
+from django.contrib import admin
+from django.urls import path
+from config.views import index
+from blog.views import post_list
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('', index),
+    path('posts/', post_list)
+]
+
+urlpatterns += static(
+    # URL의 접두어가 MEDIA_URL 일 때는 정적파일을 돌려준다.
+    prefix=settings.MEDIA_URL,
+    # 돌려줄 디렉터리는 MEDIA_ROOT 를 기준으로 한다.
+    document_root=settings.MEDIA_ROOT
+)
+
+
+- 템플릿에 업로드된 파일 보여주기
+
+- admin 개선
+
+- blog/admin.py
+@admin.register(Post)
+class PostAdmin(admin.ModelAdmin):
+# 추가
+    list_display = ['title', 'thumbnail']
+
+- Django_admin 에서 제목, 썸네일 같이 보임.
+
+- 모든 Post에 썸네일 이미지 추가하기.
+
+
+- ImageField 의 속성들
+
+- 기능 구현 확인해보기
+- python manage.py shell
+- from blog.models import Post
+- post = Post.objects.first()
+- post.thumbnail
+- post.thumbnail.name
+- post.thumbnail.path
+- post.thumbnail.size
+- post.thumbnail.url
+
+
+
+- 템플릿에 이미지 표시
+- templates/post_list.html
+추가
+<img src="{{post.thumbnail.url}}" alt="" >
+
+예시
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Post List</title>
+     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+<div id ="navbar">
+    <h1>Post List</h1>
+</div>
+<div id="post-list">
+    <ul class="posts">
+        {% for post in posts %}
+            <li class="post">
+                <div>{{post.title}}</div>
+                <p>{{post.content}}</p>
+<!--                추가-->
+                <ul class="comments">
+                    {% for comment in post.comment_set.all %}
+                        <li class="comment">{{comment.content}}</li>
+                    {% empty %}
+                        <li class="comment-empty">아직 댓글이 없음</li>
+                    {% endfor %}
+                </ul>
+                <img src="{{post.thumbnail.url}}" alt="" >
+            </li>
+        {% endfor %}
+    </ul>
+    </div>
+</body>
+</html>
+
+
+- 페이지 소스보기로 해당 이미지 경로 확인.
+      <img src="/media/post/childLook.gif" alt="" >
+
+
+- 파일이 없는 ImageField 처리
+- 새 Post 작성시 , 이미지 추가 안하고, 오류 보기.
+
+- templates/post_list.html 수정.
+  {% if post.thumbnail %}
+                    <img src="{{post.thumbnail.url}}" alt="" >
+                {% else %}
+                    <img src="" alt="">
+                {% endif %}
+
+예시
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Post List</title>
+     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+<div id ="navbar">
+    <h1>Post List</h1>
+</div>
+<div id="post-list">
+    <ul class="posts">
+        {% for post in posts %}
+            <li class="post">
+                <div>{{post.title}}</div>
+                <p>{{post.content}}</p>
+<!--                추가-->
+                <ul class="comments">
+                    {% for comment in post.comment_set.all %}
+                        <li class="comment">{{comment.content}}</li>
+                    {% empty %}
+                        <li class="comment-empty">아직 댓글이 없음</li>
+                    {% endfor %}
+                </ul>
+                {% if post.thumbnail %}
+                    <img src="{{post.thumbnail.url}}" alt="" >
+                {% else %}
+                    <img src="" alt="">
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
+    </div>
+</body>
+</html>
+
