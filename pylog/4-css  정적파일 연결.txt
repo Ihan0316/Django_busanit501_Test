@@ -8,7 +8,7 @@ css와 정적파일
 
 
 - 정적파일 관련 설정 settings.py에 추가
-- config/settings.py
+- 프로젝트명/settings.py
 
 -121 라인쯤에 있음.
 STATIC_URL = 'static/'

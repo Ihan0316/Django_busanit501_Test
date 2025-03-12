@@ -108,7 +108,11 @@ python manage.py shell
 from blog.models import Post, Comment
 first_comment = Comment.objects.first()
 
+from board.models import Board, Reply
+first_comment = Reply.objects.first()
+
 first_comment.post
+first_comment.board
 
 자식 -> 부모 방향으로 객체에 접근, 정방향 관계,
 
@@ -123,6 +127,10 @@ comment_set 이름으로 ,
 post = Post.objects.first()
 post.comment_set
 post.comment_set.all()
+
+board = Board.objects.first()
+board.reply_set
+board.reply_set.all()
 
 
 9

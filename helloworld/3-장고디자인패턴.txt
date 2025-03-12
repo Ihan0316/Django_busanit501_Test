@@ -1,7 +1,7 @@
 Django의 디자인 패턴
 
 모델-템플릿-뷰 (Model-Template-View)
-
+스프링        (Model-View - Controller
 1) Model
 데이터베이스 연결시켜주는 코드.
 각각 모델이 데이터베이스 테이블과 매핑됨.

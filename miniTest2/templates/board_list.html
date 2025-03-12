@@ -8,18 +8,18 @@
 </head>
 <body>
 <div id ="navbar">
-    <h1>Post List</h1>
+    <h1>Board List</h1>
 </div>
 <div id="post-list">
     <ul class="posts">
-        {% for post in posts %}
+        {% for board in boards %}
             <li class="post">
-                <div>{{post.title}}</div>
-                <p>{{post.content}}</p>
+                <div>{{board.title}}</div>
+                <p>{{board.content}}</p>
 <!--                추가-->
                 <ul class="comments">
-                    {% for comment in post.comment_set.all %}
-                        <li class="comment">{{comment.content}}</li>
+                    {% for reply in board.reply_set.all %}
+                        <li class="comment">{{reply.content}}</li>
                     {% empty %}
                         <li class="comment-empty">아직 댓글이 없음</li>
                     {% endfor %}
