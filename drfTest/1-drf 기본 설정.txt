@@ -1,0 +1,15 @@
+장고에서, Django REST Framework(DRF)
+
+1.
+Django REST Framework 설치,
+pip install djangorestframework
+
+2.
+INSTALLED_APPS 설정
+
+Django의 settings.py 파일을 열고, INSTALLED_APPS에 rest_framework를 추가합니다.
+
+INSTALLED_APPS = [
+    ...
+    "rest_framework",  # ✅ Django REST Framework 추가
+]

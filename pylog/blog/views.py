@@ -31,11 +31,15 @@ def post_add(request):
     if request.method == 'POST':
         title = request.POST['title']
         content = request.POST['content']
+        # 추가
+        thumbnail = request.FILES['thumbnail']
+        # 추가
         post = Post.objects.create(
             title=title,
-            content=content)
-        print(title)
-        print(content)
+            content=content,
+            # 추가
+            thumbnail=thumbnail
+        )
         # return redirect('/posts/')
         return redirect(f'/posts/{post.id}')
     else:
