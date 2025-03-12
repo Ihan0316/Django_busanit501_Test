@@ -46,7 +46,21 @@ class Post(models.Model):
  python manage.py makemigrations
  python manage.py migrate
 
+4
+관리자 연결.
+Postadmin 구성.
+blog/admin.py  에서.
+from django.contrib import admin
+from blog.models import Post
 
+# Register your models here.
+@admin.register(Post)
+class PostAdmin(admin.ModelAdmin):
+    pass
+
+5
+관리자 계정 생성.
+python manage.py createsuperuser
 
 
 
