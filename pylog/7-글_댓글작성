@@ -1,0 +1,668 @@
+
+14 글/댓글 작성
+
+- 글 작성 페이지 기본구조
+
+- 새기능 추가때 마다 반복 되는 과정.
+
+- View: blog/views.py의 post_add
+- URL : /posts/add/
+- Template : templates/post_add.html 사용
+
+
+- View
+- blog/views.py , 가장 아래쪽에 작성
+def post_add(request):
+    return render(request, 'post_add.html')
+
+- URLconf
+- config/urls.py
+-
+추가.
+from blog.views import post_list, post_detail, post_add
+path('posts/add/',post_add),
+
+예시
+"""
+URL configuration for config project.
+
+The `urlpatterns` list routes URLs to views. For more information please see:
+    https://docs.djangoproject.com/en/4.2/topics/http/urls/
+Examples:
+Function views
+    1. Add an import:  from my_app import views
+    2. Add a URL to urlpatterns:  path('', views.home, name='home')
+Class-based views
+    1. Add an import:  from other_app.views import Home
+    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
+Including another URLconf
+    1. Import the include() function: from django.urls import include, path
+    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
+"""
+
+from django.conf import settings
+from django.conf.urls.static import static
+
+from django.contrib import admin
+from django.urls import path
+from config.views import index
+from blog.views import post_list, post_detail, post_add
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('', index),
+    path('posts/', post_list),
+    path('posts/<int:post_id>/', post_detail),
+    path('posts/add/',post_add),
+]
+
+urlpatterns += static(
+    # URL의 접두어가 MEDIA_URL 일 때는 정적파일을 돌려준다.
+    prefix=settings.MEDIA_URL,
+    # 돌려줄 디렉터리는 MEDIA_ROOT 를 기준으로 한다.
+    document_root=settings.MEDIA_ROOT
+)
+
+
+
+- Template
+templates/post_add.html 새로작성
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>post_add</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+
+</body>
+</html>
+
+
+
+- 접속 확인.
+http://localhost:8000/posts/add/
+
+
+
+- 사용자의 입력을 받는 Template
+
+- HTML 형태 구현
+
+- 입력에 대한 제목 : <label>
+- 한 줄 짜리 텍스트 입력 : <input type="text">
+- 여러 줄의 텍스트 입력 : <textarea>
+- 버튼: <button>
+
+- templates/post_add.html
+
+- 확인.
+http://localhost:8000/posts/add/
+
+
+- 제목과 내용을 View에 전달.
+templates/post_add.html
+추가
+ <h1>Post Add</h1>
+        <form method="get">
+            <div>
+                <label>제목</label>
+                <input name="title" type="text">
+            </div>
+            <div>
+                <label>내용</label>
+                <textarea name="content" cols="50" rows="10"></textarea>
+            </div>
+            <button type="submit">작성</button>
+        </form>
+
+
+- 화면에서 입력하고, 전송 누르고, URL 주소 창 확인하기.
+
+- 전송 방식 post 변경 후 에러 확인.
+
+- csrf 오류 , post 방식으로 오면 방어하기 위해서
+
+- {% csrf_token %} 사용
+- 브라우저별로 구분되는 값으로 변경.
+- 이 값을 확인하는 시점은 HTML 파일이 사용자에게
+- 전달되어 브라우저에 그려진 다음이라서, 해커는 알수 없음 미리
+
+- templates/post_add.html
+추가
+     <form method="post">
+            {% csrf_token %}
+
+- 새로고침은 HTML 다시 불러오는게 아니라, 요청을 반복하는 작업
+- 주소 표시줄을 클릭 -> Enter 입력
+- 단축키 : F6 -> Enter
+
+
+- {% csrf_token %} 태그의 역할
+- 어떻게 나타나는지 확인.
+- ctrl + u
+ex)
+   <input type="hidden" name="csrfmiddlewaretoken" value="W8CaBAjxICHPvZ94a0F5HyitJ3eI0K5b4ZyqxAqchaEHSjl8vxHXudjatQeozzEH">
+
+
+
+- View 에서 POST 요청 처리
+
+- POST 데이터 다루기, 메서드에 따른 분기 처리
+
+- blog/views.py
+추가
+print(request.POST)
+
+- 확인.
+http://localhost:8000/posts/add/
+
+예시
+콘솔 출력
+<QueryDict: {'csrfmiddlewaretoken': ['W8CaBAjxICHPvZ94a0F5HyitJ3eI0K5b4ZyqxAqchaEHSjl8vxHXudjatQeozzEH'], 'title': ['ddd'], 'content': ['dddd']}>
+
+
+- blog/views.py
+수정
+def post_add(request):
+    title = request.POST['title']
+    content = request.POST['content']
+    print(title)
+    print(content)
+    return render(request, 'post_add.html')
+
+- 확인.
+http://localhost:8000/posts/add/
+
+
+오류 확인 후 수정.
+
+- blog/views.py
+수정
+
+def post_add(request):
+    if request.method == 'POST':
+        title = request.POST['title']
+        content = request.POST['content']
+        print(title)
+        print(content)
+    else:
+        print("method GET")
+        return render(request, 'post_add.html')
+
+확인 시 , 오류 발생
+POST 작성시
+
+메모
+- View 함수는 마지막에 render 함수의 실행 결과를
+돌려주었고, 내부적으로 항상 HttpResponse 를 돌려주었음.
+
+수정
+def post_add(request):
+    if request.method == 'POST':
+        title = request.POST['title']
+        content = request.POST['content']
+        print(title)
+        print(content)
+    else:
+        print("method GET")
+    return render(request, 'post_add.html')
+
+
+
+- POST 데이터를 사용한 DB row 생성
+
+- objects.create 메서드
+- ORM을을 사용해서 DB에 데이터를 생성할 때는
+create 메서드 사용함.
+- create 메서드의 리턴값은 생성된 객체이며
+- 이를 변수에서 바로 할당 가능.
+
+- ex)
+created_instance = ModelClass.objects.create(필드명=필드값)
+
+
+- 터미널 연습
+python manage.py shell
+from blog.models import Post
+Post.objects.all()
+
+post = Post.objects.create(title="a",content="b")
+
+post
+
+# 모든 Post를 생성 순서의 역순으로 가져오기.
+Post.objects.order_by("-id")
+
+-관리자 페이지에서도 확인.
+
+
+
+- View에서 객체 생성
+blog/views.py
+
+   # 추가
+        Post.objects.create(
+            title=title,
+            content=content)
+
+예)
+	from django.shortcuts import render
+from blog.models import Post
+
+# Create your views here.
+def post_list(request):
+    posts = Post.objects.all()
+    context = {'posts': posts}
+    return render(request, 'post_list.html',context)
+
+def post_detail(request,post_id):
+    post = Post.objects.get(id=post_id)
+    print(post)
+    context = {
+        "post" : post
+    }
+    return render(request, 'post_detail.html', context)
+
+def post_add(request):
+    if request.method == 'POST':
+        title = request.POST['title']
+        content = request.POST['content']
+        # 추가
+        Post.objects.create(
+            title=title,
+            content=content)
+    else:
+        print("method GET")
+    return render(request, 'post_add.html')
+
+- 브라우저에서 글작성 해보고, 관리자 페이지에서 확인.
+
+
+- 글 작성 완료 후 이동하기.
+- 다른 URL로 이동시, redirect 함수 사용.
+
+- blog/views.py
+
+추가. -> redirect
+from django.shortcuts import render, redirect
+
+
+ return redirect('/posts/')
+예)
+def post_add(request):
+    if request.method == 'POST':
+        title = request.POST['title']
+        content = request.POST['content']
+        # 추가
+        Post.objects.create(
+            title=title,
+            content=content
+        )
+        return redirect('/posts/')
+    else:
+        print("method GET")
+    return render(request, 'post_add.html')
+
+-확인, 글 작성 후 , 목록으로 이동함.
+
+- 생성된 Post의 id를 포함한 URL로 이동
+- blog/views.py
+
+수정.
+   # 추가
+        post = Post.objects.create(
+            title=title,
+            content=content
+        )
+        return redirect(f'/posts/{post.id}')
+
+예)
+def post_add(request):
+    if request.method == 'POST':
+        title = request.POST['title']
+        content = request.POST['content']
+        # 추가
+        post = Post.objects.create(
+            title=title,
+            content=content
+        )
+        return redirect(f'/posts/{post.id}')
+    else:
+        print("method GET")
+    return render(request, 'post_add.html')
+
+-확인
+- 글 작성후 -> 해당 상세페이지로 이동.
+
+
+
+- CSS 적용 및 링크 생성
+
+- templates/post_add.html
+
+추가
+    <div id="navbar">
+        <span>글 작성</span>
+    </div>
+    <div id="post-add">
+
+수정
+<button type="submit" class="btn btn-primary">작성</button>
+
+예)
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>post_add</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <div id="navbar">
+        <span>글 작성</span>
+    </div>
+    <div id="post-add">
+        <form method="post">
+            {% csrf_token %}
+            <div>
+                <label>제목</label>
+                <input name="title" type="text">
+            </div>
+            <div>
+                <label>내용</label>
+                <textarea name="content" cols="50" rows="10"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">작성</button>
+        </form>
+    </div>
+</body>
+</html>
+
+
+- 글 목록 페이지 -> 글 작성 페이지로 오는 링크 추가
+- templates/post-list.html
+추가.
+<a href="/posts/add/" class="btn btn-primary">글 작성</a>
+예)
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Post List</title>
+     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+<div id ="navbar">
+    <h1>Post List</h1>
+    <a href="/posts/add/" class="btn btn-primary">글 작성</a>
+</div>
+<div id="post-list">
+    <ul class="posts">
+        {% for post in posts %}
+            <li class="post">
+                <div>
+                    <a href="/posts/{{post.id}}">{{post.title}}</a>
+                </div>
+                <h2>{{post.title}}</h2>
+                <p>{{post.content}}</p>
+<!--                추가-->
+                <ul class="comments">
+                    {% for comment in post.comment_set.all %}
+                        <li class="comment">{{comment.content}}</li>
+                    {% empty %}
+                        <li class="comment-empty">아직 댓글이 없음</li>
+                    {% endfor %}
+                </ul>
+                {% if post.thumbnail %}
+                    <img src="{{post.thumbnail.url}}" alt="" >
+                {% else %}
+                    <img src="" alt="">
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
+    </div>
+</body>
+</html>
+
+
+
+- 댓글 작성.
+
+- Comment 객체 생성 실습
+- 제목이 없고, 작성한 댓글이 반드시 어떤 글에 소속됨.
+
+- 쉘 연습
+-
+python manage.py shell
+from blog.models import Comment
+
+Comment.objects.all().delete()
+
+Comment.objects.create(content="sample Content")
+
+오류 확인.
+
+from blog.models import Post
+
+post = Post.objects.first()
+
+print(post.id)
+
+Comment.objects.create(post=post, content="sample Content")
+
+- 브라우저에서
+- 확인 , 1번글 확인.
+
+
+- 댓글 생성 form을 Template에 추가
+
+- templates/post_detail.html
+...
+<ul class="comments">
+...
+
+<!--        추가-->
+        <form method="post">
+            {% csrf_token %}
+            <textarea name="comment"></textarea>
+            <button type="submit" class="btn btn-primary">댓글 작성</button>
+        </form>
+예)
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>post_detail</title>
+     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <div id="navbar">
+        {% if post.thumbnail %}
+            <img src="{{post.thumbnail.url}}">
+        {% endif %}
+        <span>{{post.title}}</span>
+    </div>
+    <div id="post-detail">
+        <p>{{post.content | linebreaksbr}}</p>
+        <ul class="comments">
+            {% for comment in post.comment_set.all %}
+                <li class="comment">{{comment.content}}</li>
+            {% empty %}
+                <li class="comment-empty">아직 댓글이 없음</li>
+            {% endfor %}
+        </ul>
+<!--        추가-->
+        <form method="post">
+            {% csrf_token %}
+            <textarea name="comment"></textarea>
+            <button type="submit" class="btn btn-primary">댓글 작성</button>
+        </form>
+    </div>
+</body>
+</html>
+
+- 뷰만 확인
+
+- View에서 Comment 생성
+- blog/views.py
+추가
+    if request.method == 'POST':
+        comment_content = request.POST["comment"]
+        print(comment_content)
+
+예)
+def post_detail(request,post_id):
+    post = Post.objects.get(id=post_id)
+    if request.method == 'POST':
+        comment_content = request.POST["comment"]
+        print(comment_content)
+    context = {
+        "post" : post
+    }
+    return render(request, 'post_detail.html', context)
+
+
+
+- ORM을 사용해 Comment를 생성
+- blog/views.py
+
+추가
+from blog.models import Post, Comment
+수정
+ if request.method == 'POST':
+        comment_content = request.POST["comment"]
+        Comment.objects.create(
+            post=post,
+            content=comment_content
+        )
+
+예)
+def post_detail(request,post_id):
+    post = Post.objects.get(id=post_id)
+    if request.method == 'POST':
+        comment_content = request.POST["comment"]
+        Comment.objects.create(
+            post=post,
+            content=comment_content
+        )
+    context = {
+        "post" : post
+    }
+    return render(request, 'post_detail.html', context)
+
+
+
+- 댓글 작성후, 현제 페이지에 다시 렌더하는 부분 확인.
+
+
+
+- 글 작성시 이미지 업로드
+- 이미지와 같은 파일을 form으로 전달 받으려면
+Template과 View에서 별도의 처리가 필요.
+
+- 파일 첨부시 <input type = "file"> 태그 사용.
+
+- templates/post_add.html
+
+수정.
+    <form method="post" enctype="multipart/form-data">
+추가.
+  <div>
+                <label>썸네일</label>
+                <input name="thumbnail" type="file">
+            </div>
+
+예)
+	<!--        수정-->
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div>
+                <label>제목</label>
+                <input name="title" type="text">
+            </div>
+            <div>
+                <label>내용</label>
+                <textarea name="content" cols="50" rows="10"></textarea>
+            </div>
+             <div>
+                <label>썸네일</label>
+                <input name="thumbnail" type="file">
+            </div>
+            <button type="submit" class="btn btn-primary">작성</button>
+        </form>
+
+
+-뷰 확인.
+
+- View에서 POST 메서드로 전달받은 데이터는
+request.POST 에서 가져옴.
+
+- 전송된 파일은 request.POST 대신
+request.FILES에서 가져와야함. !!
+
+- blog/views.py
+# 추가
+        print(request.FILES)
+
+예)
+def post_add(request):
+    if request.method == 'POST':
+        # 추가
+        print(request.FILES)
+        title = request.POST['title']
+        content = request.POST['content']
+        # 추가
+        post = Post.objects.create(
+            title=title,
+            content=content
+        )
+        return redirect(f'/posts/{post.id}')
+    else:
+        print("method GET")
+    return render(request, 'post_add.html')
+
+- 확인 글 작성 해보기. 이미지포함.
+
+- request.FILES 로 전달된
+InMemoryUploadedFile 은 Django에 내장된
+File을 다루기 위한 클래스.
+
+- blog/views.py
+
+   # 추가
+        thumbnail = request.FILES['thumbnail']
+
+# 추가
+            thumbnail=thumbnail
+
+
+예)
+def post_add(request):
+    if request.method == 'POST':
+        # 추가
+        # print(request.FILES)
+        title = request.POST['title']
+        content = request.POST['content']
+        # 추가
+        thumbnail = request.FILES['thumbnail']
+        # 추가
+        post = Post.objects.create(
+            title=title,
+            content=content,
+            # 추가
+            thumbnail=thumbnail
+        )
+        return redirect(f'/posts/{post.id}')
+    else:
+        print("method GET")
+    return render(request, 'post_add.html')
+
+- 확인. 이미지 포함 글작성해보기.
