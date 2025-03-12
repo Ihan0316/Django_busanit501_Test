@@ -16,6 +16,17 @@ INSTALLED_APPS = [
 
 3.
 Post 모델을 예를 들어, 레스트 작업, crud,
+
+- 새 app 생성, settings 에 등록
+python manage.py startapp blog
+
+프로젝트명/settings.py
+
+INSTALLED_APPS = [
+    'blog',
+    ...
+    ]
+
 모델 (Model)
 
 models.py에 간단한 Post 모델을 정의합니다.
