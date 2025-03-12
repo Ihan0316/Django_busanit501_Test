@@ -20,9 +20,20 @@ from django.urls import path
 from blog.views import post_list
 from pylog.views import index
 
+from django.conf import settings
+from django.conf.urls.static import static
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', index),
     path('posts/', post_list),
 
 ]
+
+urlpatterns += static(
+    # URL의 접두어가 MEDIA_URL 일 때는 정적파일을 돌려준다.
+    # media/
+    prefix=settings.MEDIA_URL,
+    # 돌려줄 디렉터리는 MEDIA_ROOT 를 기준으로 한다.
+    document_root=settings.MEDIA_ROOT
+)

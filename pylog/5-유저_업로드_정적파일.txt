@@ -1,6 +1,6 @@
 5 유저가 업로드 하는 정적파일
 
-- config/settings.py
+- 프로젝트명/settings.py
 
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
@@ -57,7 +57,7 @@ http://127.0.0.1:8000/admin/
 
 
 - MEDIA_URL 과 업로드 파일 연결
-- config/urls.py
+- 프로젝트명/urls.py
 
 추가
 from django.conf import settings
@@ -108,6 +108,9 @@ urlpatterns += static(
     document_root=settings.MEDIA_ROOT
 )
 
+추가 후,
+이미지를 , 프로젝트 미디어 폴더에서 조회하는 방법
+http://localhost:8000/media/post/이미지이름(확장자포함)
 
 - 템플릿에 업로드된 파일 보여주기
 

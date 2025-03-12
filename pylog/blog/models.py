@@ -4,6 +4,9 @@ from django.db import models
 class Post(models.Model):
     title = models.CharField("포스트 제목", max_length=100)
     content = models.TextField("포스트 내용")
+    # 사용자가 업로드한 이미지 추가하는 필드
+    thumbnail = models.ImageField("썸네일 이미지",
+                                  upload_to="post", blank=True)
 
     def __str__(self):
         return self.title
