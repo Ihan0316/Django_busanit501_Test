@@ -32,7 +32,11 @@ class Post(models.Model):
 오류 발생. 설치 필요
 
 순서3
+장고 5버전 미만 용
 - pip install 'Pillow<10'
+
+최신 버전 장고 설치, 최신 버전으로 설치.
+pip install Pillow
 
 다시,
 
