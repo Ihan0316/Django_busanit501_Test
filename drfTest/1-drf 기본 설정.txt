@@ -88,4 +88,29 @@ class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
 
+8
+라우팅 작업, urls
+urls.py
 
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import PostViewSet
+
+# ✅ 자동 URL 라우팅 (ModelViewSet 사용 시)
+# DefaultRouter()를 사용하면 자동으로 posts/ 경로에 API를 매핑.
+# router.register(r'posts', PostViewSet) → posts/ 경로에서 CRUD API 제공.
+
+router = DefaultRouter()
+router.register(r"posts", PostViewSet)
+
+urlpatterns = [
+ path("api/", include(router.urls)),  # API 엔드포인트 등록
+
+9
+API 엔드포인트 확인
+
+GET /api/posts/ → 모든 게시글 조회
+POST /api/posts/ → 새로운 게시글 생성
+GET /api/posts/{id}/ → 특정 게시글 조회
+PUT /api/posts/{id}/ → 특정 게시글 수정
+DELETE /api/posts/{id}/ → 특정 게시글 삭제
