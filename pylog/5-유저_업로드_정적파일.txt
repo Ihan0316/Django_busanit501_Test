@@ -2,6 +2,7 @@
 
 - 프로젝트명/settings.py
 
+순서1
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
@@ -9,6 +10,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
 자동 생성됨. 업로드 시점에.
 
 
+순서2
 - 정적파일을 저장하는 필드 추가.
 - blog/models.py
 
@@ -29,25 +31,31 @@ class Post(models.Model):
 
 오류 발생. 설치 필요
 
+순서3
 - pip install 'Pillow<10'
 
 다시,
 
+순서4
 - python manage.py makemigrations
 
 - 변경사항을 담은 migration 이 생성되었고,
 - migrate 명령어로 변경사항 DB에 적용
+순서5
 - python manage.py migrate
 
+순서6
 - 서버 재시작
 
 - 확인.
 - Django admin에서 확인.
+순서7
 http://127.0.0.1:8000/admin/
 
 -BLOG -> Posts -> ADD POST
 - 사진 선택됨.
 
+순서8
 프로젝트 폴더 -> media/post -> 이미지 파일 있음.
 
 
@@ -55,7 +63,7 @@ http://127.0.0.1:8000/admin/
 - Django admin에서 해당 사진 클릭시 오류 발생
 
 
-
+순서9
 - MEDIA_URL 과 업로드 파일 연결
 - 프로젝트명/urls.py
 
@@ -69,46 +77,10 @@ urlpatterns += static(
     # 돌려줄 디렉터리는 MEDIA_ROOT 를 기준으로 한다.
     document_root=settings.MEDIA_ROOT
 )
-예시
-"""
-URL configuration for config project.
 
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/4.2/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
-
-from django.conf import settings
-from django.conf.urls.static import static
-
-from django.contrib import admin
-from django.urls import path
-from config.views import index
-from blog.views import post_list
-
-urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('', index),
-    path('posts/', post_list)
-]
-
-urlpatterns += static(
-    # URL의 접두어가 MEDIA_URL 일 때는 정적파일을 돌려준다.
-    prefix=settings.MEDIA_URL,
-    # 돌려줄 디렉터리는 MEDIA_ROOT 를 기준으로 한다.
-    document_root=settings.MEDIA_ROOT
-)
 
 추가 후,
+순서10
 이미지를 , 프로젝트 미디어 폴더에서 조회하는 방법
 http://localhost:8000/media/post/이미지이름(확장자포함)
 
@@ -116,6 +88,7 @@ http://localhost:8000/media/post/이미지이름(확장자포함)
 
 - admin 개선
 
+순서11
 - blog/admin.py
 @admin.register(Post)
 class PostAdmin(admin.ModelAdmin):
@@ -123,6 +96,7 @@ class PostAdmin(admin.ModelAdmin):
     list_display = ['title', 'thumbnail']
 
 - Django_admin 에서 제목, 썸네일 같이 보임.
+============================================================
 
 - 모든 Post에 썸네일 이미지 추가하기.
 
