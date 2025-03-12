@@ -102,10 +102,11 @@ class PostAdmin(admin.ModelAdmin):
 
 
 - ImageField 의 속성들
-
+순서12
 - 기능 구현 확인해보기
 - python manage.py shell
 - from blog.models import Post
+
 - post = Post.objects.first()
 - post.thumbnail
 - post.thumbnail.name
@@ -115,6 +116,7 @@ class PostAdmin(admin.ModelAdmin):
 
 
 
+순서12
 - 템플릿에 이미지 표시
 - templates/post_list.html
 추가
@@ -163,6 +165,7 @@ class PostAdmin(admin.ModelAdmin):
 - 파일이 없는 ImageField 처리
 - 새 Post 작성시 , 이미지 추가 안하고, 오류 보기.
 
+순서13
 - templates/post_list.html 수정.
   {% if post.thumbnail %}
                     <img src="{{post.thumbnail.url}}" alt="" >
