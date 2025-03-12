@@ -16,7 +16,7 @@ def post_add(request):
     return render(request, 'post_add.html')
 
 - URLconf
-- config/urls.py
+- 프로젝트명/urls.py
 -
 추가.
 from blog.views import post_list, post_detail, post_add
