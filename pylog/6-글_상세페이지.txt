@@ -1,0 +1,310 @@
+
+13 글 상세 페이지
+
+- 새 기능을 추가시
+- 빈 View, URL, Template 만들고 연결 확인.
+
+- View: blog/views.py의 post_detail
+- URL: ID 1 /posts/1
+- Template : templates/post_detail.html
+
+
+- View
+- blog/views.py , 가장 아래쪽에 작성.
+def post_detail(request):
+    return render(request, 'post_detail.html')
+
+
+- URLconf
+- config/urls.py
+추가
+from blog.views import post_list, post_detail
+path('posts/1/', post_detail)
+예시
+"""
+URL configuration for config project.
+
+The `urlpatterns` list routes URLs to views. For more information please see:
+    https://docs.djangoproject.com/en/4.2/topics/http/urls/
+Examples:
+Function views
+    1. Add an import:  from my_app import views
+    2. Add a URL to urlpatterns:  path('', views.home, name='home')
+Class-based views
+    1. Add an import:  from other_app.views import Home
+    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
+Including another URLconf
+    1. Import the include() function: from django.urls import include, path
+    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
+"""
+
+from django.conf import settings
+from django.conf.urls.static import static
+
+from django.contrib import admin
+from django.urls import path
+from config.views import index
+from blog.views import post_list, post_detail
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('', index),
+    path('posts/', post_list),
+    path('posts/1/', post_detail)
+]
+
+urlpatterns += static(
+    # URL의 접두어가 MEDIA_URL 일 때는 정적파일을 돌려준다.
+    prefix=settings.MEDIA_URL,
+    # 돌려줄 디렉터리는 MEDIA_ROOT 를 기준으로 한다.
+    document_root=settings.MEDIA_ROOT
+)
+
+
+- Template
+templates/post_detail.html 새로생성
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>post_detail</title>
+     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <div id="navbar">
+        <span>pylog</span>
+    </div>
+    <div id="post-detail">
+        <h1>Post Detail</h1>
+    </div>
+</body>
+</html>
+
+
+- 접속 확인.
+http://localhost:8000/posts/1/
+
+
+
+- 동적 URL 경로
+
+- config/urls.py
+수정
+path('posts/<int:post_id>/', post_detail)
+
+
+- 접속 확인.
+http://localhost:8000/posts/10000/
+
+오류확인.
+TypeError
+
+
+- blog/views.py
+수정.
+def post_detail(request,post_id):
+    return render(request, 'post_detail.html')
+
+
+- 접속 확인.
+http://localhost:8000/posts/10000/
+
+- 정상 표시, 하지만 같은 화면
+
+
+- ID에 해당하는 글 보여주기.
+
+- 전달받은 인수를 Template에 보여주기
+
+- blog/views.py
+수정
+def post_detail(request,post_id):
+    context = {
+        "post_id" : post_id
+    }
+    return render(request, 'post_detail.html', context)
+
+
+- Template에서 전달받은 값을 표시
+templates/post_detail.html
+
+추가, 확인.
+<p>{{post_id}}</p>
+
+    <div id="post-detail">
+        <h1>Post Detail</h1>
+        <p>{{post_id}}</p>
+    </div>
+
+- 접속 확인.
+http://localhost:8000/posts/10000/
+
+
+- ID에 해당하는 Post 객체 가져오기.
+
+- 상세 페이지 View에서 ORM을 사용해 URL로 전달된
+post_id 값을 id로 갖는 Post 가져오기.
+
+- blog/views.py
+추가
+  post = Post.objects.get(id=post_id)
+    print(post)
+예시
+def post_detail(request,post_id):
+    post = Post.objects.get(id=post_id)
+    print(post)
+    context = {
+        "post_id" : post_id
+    }
+    return render(request, 'post_detail.html', context)
+
+- 접속 확인.
+http://localhost:8000/posts/3/
+
+
+- post_id -> post , 해당 객체로 변경.
+
+
+- templates/post_detail.html
+수정.
+  <div id="post-detail">
+        <h1>{{post.title}}</h1>
+        <p>{{post.content}}</p>
+        <p>{{post.thumbnail}}</p>
+    </div>
+
+
+- 접속 확인.
+http://localhost:8000/posts/3/
+
+
+
+- CSS 적용
+templates/post_detail.html
+수정.
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>post_detail</title>
+     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <div id="navbar">
+        {% if post.thumbnail %}
+            <img src="{{post.thumbnail.url}}">
+        {% endif %}
+        <span>{{post.title}}</span>
+    </div>
+    <div id="post-detail">
+        <p>{{post.content}}</p>
+    </div>
+</body>
+</html>
+
+
+
+- 줄바꿈 추가.
+수정
+<p>{{post.content | linebreaksbr}}</p>
+
+
+
+- 댓글 목록 표시
+
+templates/post_detail.html
+추가
+ <ul class="comments">
+            {% for comment in post.comment_set.all %}
+                <li class="comment">{{comment.content}}</li>
+            {% empty %}
+                <li class="comment-empty">아직 댓글이 없음</li>
+            {% endfor %}
+        </ul>
+예시
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>post_detail</title>
+     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <div id="navbar">
+        {% if post.thumbnail %}
+            <img src="{{post.thumbnail.url}}">
+        {% endif %}
+        <span>{{post.title}}</span>
+    </div>
+    <div id="post-detail">
+        <p>{{post.content | linebreaksbr}}</p>
+        <ul class="comments">
+            {% for comment in post.comment_set.all %}
+                <li class="comment">{{comment.content}}</li>
+            {% empty %}
+                <li class="comment-empty">아직 댓글이 없음</li>
+            {% endfor %}
+        </ul>
+    </div>
+</body>
+</html>
+
+
+
+- 글 목록과 상세페이지 연결
+
+- templates/post_list.html
+추가
+<div>
+                    <a href="/posts/{{post.id}}">{{post.title}}</a>
+                </div>
+
+예시
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Post List</title>
+     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+<div id ="navbar">
+    <h1>Post List</h1>
+</div>
+<div id="post-list">
+    <ul class="posts">
+        {% for post in posts %}
+            <li class="post">
+                <div>
+                    <a href="/posts/{{post.id}}">{{post.title}}</a>
+                </div>
+                <h2>{{post.title}}</h2>
+                <p>{{post.content}}</p>
+<!--                추가-->
+                <ul class="comments">
+                    {% for comment in post.comment_set.all %}
+                        <li class="comment">{{comment.content}}</li>
+                    {% empty %}
+                        <li class="comment-empty">아직 댓글이 없음</li>
+                    {% endfor %}
+                </ul>
+                {% if post.thumbnail %}
+                    <img src="{{post.thumbnail.url}}" alt="" >
+                {% else %}
+                    <img src="" alt="">
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
+    </div>
+</body>
+</html>
+
+- 작업 확인.
+http://localhost:8000/posts/
+여기서 제목 클릭시 , 해당 상세페이지 이동
