@@ -23,6 +23,9 @@ def post_add(request):
     if request.method == 'POST':
         title = request.POST['title']
         content = request.POST['content']
+        Post.objects.create(
+            title=title,
+            content=content)
         print(title)
         print(content)
     else:
