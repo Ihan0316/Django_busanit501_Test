@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'blog',
+    'drf_yasg',  # ✅ drf-yasg (Swagger) 추가
 ]
 
 MIDDLEWARE = [
