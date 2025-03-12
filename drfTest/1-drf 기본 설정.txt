@@ -62,7 +62,30 @@ class PostAdmin(admin.ModelAdmin):
 관리자 계정 생성.
 python manage.py createsuperuser
 
+6
+시리얼라이저 (Serializer)
+Django의 모델 데이터를 JSON으로 변환해주는 serializers.py를 생성합니다.
 
+📌 serializers.py
 
+from rest_framework import serializers
+from .models import Post
+
+class PostSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Post
+        fields = ["id", "title", "content", "created_at"]  # JSON으로 변환할 필드 지정
+
+7
+views 작업, crud 작업을 자동으로 해주는 도구 이용.
+
+RESTful API 엔드포인트 (CRUD 기능 자동 지원)
+# ModelViewSet을 사용하면 CRUD(Create, Read, Update, Delete)
+# API를 자동으로 생성해 줌.
+# 부모 클래스 : viewsets.ModelViewSet, 상속,
+
+class PostViewSet(viewsets.ModelViewSet):
+    queryset = Post.objects.all()
+    serializer_class = PostSerializer
 
 
