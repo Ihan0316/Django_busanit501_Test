@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 
-from blog.models import Post
+from blog.models import Post, Comment
 
 
 # Create your views here.
@@ -17,6 +17,10 @@ def post_detail(request,post_id):
     if request.method == 'POST':
         comment_content = request.POST["comment"]
         print(comment_content)
+        Comment.objects.create(
+            post=post,
+            content=comment_content
+        )
     # POST 가 아닌 경우, 화면 제공
     context = {
         "post" : post
