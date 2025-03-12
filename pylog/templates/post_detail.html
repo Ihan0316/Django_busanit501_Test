@@ -22,6 +22,12 @@
                 <li class="comment-empty">아직 댓글이 없음</li>
             {% endfor %}
         </ul>
+<!--        추가-->
+        <form method="post">
+            {% csrf_token %}
+            <textarea name="comment"></textarea>
+            <button type="submit" class="btn btn-primary">댓글 작성</button>
+        </form>
     </div>
 </body>
 </html>

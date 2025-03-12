@@ -13,11 +13,15 @@ def post_list(request):
 
 def post_detail(request,post_id):
     post = Post.objects.get(id=post_id)
-    print(post)
+    # POST, 로직처리
+    if request.method == 'POST':
+        comment_content = request.POST["comment"]
+        print(comment_content)
+    # POST 가 아닌 경우, 화면 제공
     context = {
-        "post": post
+        "post" : post
     }
-    return render(request, 'post_detail.html',context)
+    return render(request, 'post_detail.html', context)
 
 def post_add(request):
     if request.method == 'POST':
