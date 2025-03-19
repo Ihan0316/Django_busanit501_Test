@@ -7,6 +7,7 @@ from PIL import Image
 import json
 from django.shortcuts import render
 from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 
 from config.forms import ImageUploadForm
 from .models import load_model
@@ -26,7 +27,9 @@ def transform_image(image):
     ])
     return transform(image).unsqueeze(0)  # 배치 차원 추가
 
+
 # API: 이미지 업로드 및 분류
+@csrf_exempt  # CSRF 보호 비활성화
 def classify_image(request):
     if request.method == "POST":
         form = ImageUploadForm(request.POST, request.FILES)
