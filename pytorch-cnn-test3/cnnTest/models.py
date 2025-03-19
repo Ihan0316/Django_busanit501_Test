@@ -3,6 +3,8 @@ from django.db import models
 # Create your models here.
 import torch
 import torch.nn as nn
+import os
+from config import settings
 import torch.optim as optim
 from django.db import models
 
@@ -26,7 +28,8 @@ class CustomCNN(nn.Module):
         return x
 
 # 모델 로드 함수
-def load_model(model_path="custom_cnn.pth"):
+def load_model():
+    model_path = os.path.join(settings.BASE_DIR, "custom_cnn.pth")
     model = CustomCNN(num_classes=2)
     model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
     model.eval()
