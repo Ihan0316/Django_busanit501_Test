@@ -33,6 +33,8 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    "rest_framework",  # ✅ Django REST Framework 추가
+    "drf_yasg",  # ✅ drf-yasg (Swagger) 추가
     'cnnTest',
     'django.contrib.admin',
     'django.contrib.auth',
