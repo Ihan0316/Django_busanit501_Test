@@ -36,47 +36,47 @@ scaler = torch.load('./model/scaler_250321.pth', map_location=torch.device('cpu'
 
 # ======================================================================================================================
 # 추가1: LSTM 모델 정의
-# class LSTMModel(nn.Module):  # PyTorch의 LSTM 모델 클래스 정의
-#     def __init__(self, input_size=4, hidden_size=128, output_size=1, num_layers=2, dropout=0.3):
-#         super(LSTMModel, self).__init__()  # nn.Module의 생성자 호출
-#         self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True, dropout=dropout)  # LSTM 레이어 정의
-#         self.fc = nn.Linear(hidden_size, output_size)  # 완전 연결 레이어 정의
-#         self.relu = nn.ReLU()  # 활성화 함수 ReLU 정의
-#
-#     def forward(self, x):  # 순전파 함수 정의
-#         lstm_out, _ = self.lstm(x)  # LSTM의 출력 계산, lstm_out 모양 예시: [배치 크기, 시퀀스 길이, 은닉 크기] (예: [64, 60, 128])
-#         last_out = lstm_out[:, -1, :]  # 마지막 시퀀스의 출력을 선택, last_out 모양 예시: [배치 크기, 은닉 크기] (예: [64, 128])
-#         out = self.fc(self.relu(last_out))  # ReLU 활성화 후 완전 연결 레이어 통과, out 모양 예시: [배치 크기, 출력 크기] (예: [64, 1])
-#         return out
+class LSTMModel(nn.Module):  # PyTorch의 LSTM 모델 클래스 정의
+    def __init__(self, input_size=4, hidden_size=128, output_size=1, num_layers=2, dropout=0.3):
+        super(LSTMModel, self).__init__()  # nn.Module의 생성자 호출
+        self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True, dropout=dropout)  # LSTM 레이어 정의
+        self.fc = nn.Linear(hidden_size, output_size)  # 완전 연결 레이어 정의
+        self.relu = nn.ReLU()  # 활성화 함수 ReLU 정의
+
+    def forward(self, x):  # 순전파 함수 정의
+        lstm_out, _ = self.lstm(x)  # LSTM의 출력 계산, lstm_out 모양 예시: [배치 크기, 시퀀스 길이, 은닉 크기] (예: [64, 60, 128])
+        last_out = lstm_out[:, -1, :]  # 마지막 시퀀스의 출력을 선택, last_out 모양 예시: [배치 크기, 은닉 크기] (예: [64, 128])
+        out = self.fc(self.relu(last_out))  # ReLU 활성화 후 완전 연결 레이어 통과, out 모양 예시: [배치 크기, 출력 크기] (예: [64, 1])
+        return out
 
 
 # LSTM 모델 로드
-# model2 = LSTMModel()  # LSTM 모델 인스턴스 생성
-# model2.load_state_dict(
-#     torch.load('./model/7-samsungStock_LSTM_60days_basic.pth', map_location=torch.device('cpu')))  # 모델 가중치 로드
-# model2.eval()  # 평가 모드로 설정
-# scaler = torch.load('./model/7-scaler_LSTM_60days_basic.pth')  # 스케일러 로드
-#
+model2 = LSTMModel()  # LSTM 모델 인스턴스 생성
+model2.load_state_dict(
+    torch.load('./model/samsungStock_LSTM_60days_basic.pth', map_location=torch.device('cpu')))  # 모델 가중치 로드
+model2.eval()  # 평가 모드로 설정
+scaler = torch.load('./model/scaler_LSTM_60days_basic.pth',weights_only=False)  # 스케일러 로드
+
 
 # ======================================================================================================================
 # 추가2: GRU 모델 정의
-# class GRUModel(nn.Module):  # PyTorch를 사용하여 GRU(Gated Recurrent Unit) 모델을 정의합니다
-#     def __init__(self, input_size=4, hidden_size=64, num_layers=1, output_size=1):
-#         super(GRUModel, self).__init__()  # nn.Module의 생성자 호출
-#         self.gru = nn.GRU(input_size, hidden_size, num_layers, batch_first=True)  # GRU 레이어 정의
-#         self.fc = nn.Linear(hidden_size, output_size)  # 완전 연결 레이어 정의
-#
-#     def forward(self, x):  # 순전파 정의
-#         out, _ = self.gru(x)  # GRU 레이어를 통해 입력 처리, out 모양 예시: [배치 크기, 시퀀스 길이, 은닉 크기] (예: [64, 60, 64])
-#         out = self.fc(out[:, -1])  # 마지막 시퀀스 은닉 상태로 선형 레이어에 전달, out 모양 예시: [배치 크기, 출력 크기] (예: [64, 1])
-#         return out
+class GRUModel(nn.Module):  # PyTorch를 사용하여 GRU(Gated Recurrent Unit) 모델을 정의합니다
+    def __init__(self, input_size=4, hidden_size=64, num_layers=1, output_size=1):
+        super(GRUModel, self).__init__()  # nn.Module의 생성자 호출
+        self.gru = nn.GRU(input_size, hidden_size, num_layers, batch_first=True)  # GRU 레이어 정의
+        self.fc = nn.Linear(hidden_size, output_size)  # 완전 연결 레이어 정의
+
+    def forward(self, x):  # 순전파 정의
+        out, _ = self.gru(x)  # GRU 레이어를 통해 입력 처리, out 모양 예시: [배치 크기, 시퀀스 길이, 은닉 크기] (예: [64, 60, 64])
+        out = self.fc(out[:, -1])  # 마지막 시퀀스 은닉 상태로 선형 레이어에 전달, out 모양 예시: [배치 크기, 출력 크기] (예: [64, 1])
+        return out
 
 
 # GRU 모델 로드
-# model3 = GRUModel()  # GRU 모델 인스턴스 생성
-# model3.load_state_dict(torch.load('./model/7-samsungStock_GRU.pth', map_location=torch.device('cpu')))  # 모델 가중치 로드
-# model3.eval()  # 평가 모드로 설정
-# scaler = torch.load('./model/7-scaler_GRU.pth')  # 스케일러 로드
+model3 = GRUModel()  # GRU 모델 인스턴스 생성
+model3.load_state_dict(torch.load('./model/samsungStock_GRU_250321.pth', map_location=torch.device('cpu')))  # 모델 가중치 로드
+model3.eval()  # 평가 모드로 설정
+scaler = torch.load('./model/scaler_GRU_250321.pth',weights_only=False)  # 스케일러 로드
 
 
 @app.route('/')
@@ -128,90 +128,90 @@ def predict1():  # RNN 모델 예측 엔드포인트
 
 
 # LSTM 예측 엔드포인트
-# @app.route('/predict2', methods=['POST'])
-# def predict2():
-#     try:
-#         data = request.get_json()  # JSON 데이터에서 입력 값 추출
-#         if not data or 'data' not in data or 'period' not in data:
-#             return jsonify({"error": "요청에 데이터 또는 기간 정보가 포함되어 있지 않습니다."}), 400
-#         input_data = data['data']
-#         period = data['period']
-#
-#         period_days_map = {
-#             '1d': 1,
-#             '5d': 4,
-#             '1mo': 17,
-#             '3mo': 58,
-#             '6mo': 116,
-#             '1y': 239
-#         }
-#
-#         if period not in period_days_map:
-#             return jsonify({"error": "지원되지 않는 기간입니다."}), 400
-#
-#         expected_length = period_days_map[period]
-#
-#         if not isinstance(input_data, list) or len(input_data) != expected_length:
-#             return jsonify({"error": f"잘못된 입력입니다. {expected_length}일치 Open, High, Low, Close 데이터를 제공하세요."}), 400
-#
-#         input_data = np.array(input_data)  # 입력 데이터 배열 생성
-#         input_data = scaler.transform(input_data)  # 스케일러로 정규화
-#         input_data = np.expand_dims(input_data, axis=0)  # 배치 차원 추가
-#         input_data = torch.Tensor(input_data)
-#
-#         with torch.no_grad():
-#             prediction = model2(input_data).item()  # LSTM 모델 예측 수행
-#
-#         prediction = scaler.inverse_transform([[0, 0, 0, prediction]])[0][3]  # 종가 기준으로 역정규화
-#
-#         return jsonify({"prediction": round(prediction, 2)})
-#
-#     except Exception as e:
-#         return jsonify({"error": "예측 중 오류가 발생했습니다.", "details": str(e)}), 500
+@app.route('/predict2', methods=['POST'])
+def predict2():
+    try:
+        data = request.get_json()  # JSON 데이터에서 입력 값 추출
+        if not data or 'data' not in data or 'period' not in data:
+            return jsonify({"error": "요청에 데이터 또는 기간 정보가 포함되어 있지 않습니다."}), 400
+        input_data = data['data']
+        period = data['period']
+
+        period_days_map = {
+            '1d': 1,
+            '5d': 4,
+            '1mo': 17,
+            '3mo': 58,
+            '6mo': 116,
+            '1y': 239
+        }
+
+        if period not in period_days_map:
+            return jsonify({"error": "지원되지 않는 기간입니다."}), 400
+
+        expected_length = period_days_map[period]
+
+        if not isinstance(input_data, list) or len(input_data) != expected_length:
+            return jsonify({"error": f"잘못된 입력입니다. {expected_length}일치 Open, High, Low, Close 데이터를 제공하세요."}), 400
+
+        input_data = np.array(input_data)  # 입력 데이터 배열 생성
+        input_data = scaler.transform(input_data)  # 스케일러로 정규화
+        input_data = np.expand_dims(input_data, axis=0)  # 배치 차원 추가
+        input_data = torch.Tensor(input_data)
+
+        with torch.no_grad():
+            prediction = model2(input_data).item()  # LSTM 모델 예측 수행
+
+        prediction = scaler.inverse_transform([[0, 0, 0, prediction]])[0][3]  # 종가 기준으로 역정규화
+
+        return jsonify({"prediction": round(prediction, 2)})
+
+    except Exception as e:
+        return jsonify({"error": "예측 중 오류가 발생했습니다.", "details": str(e)}), 500
 
 
 # GRU 예측 엔드포인트
-# @app.route('/predict3', methods=['POST'])
-# def predict3():
-#     try:
-#         data = request.get_json()  # JSON 데이터에서 입력 값 추출
-#         if not data or 'data' not in data or 'period' not in data:
-#             return jsonify({"error": "요청에 데이터 또는 기간 정보가 포함되어 있지 않습니다."}), 400
-#         input_data = data['data']
-#         period = data['period']
-#
-#         period_days_map = {
-#             '1d': 1,
-#             '5d': 4,
-#             '1mo': 17,
-#             '3mo': 58,
-#             '6mo': 116,
-#             '1y': 239
-#         }
-#
-#         if period not in period_days_map:
-#             return jsonify({"error": "지원되지 않는 기간입니다."}), 400
-#
-#         expected_length = period_days_map[period]
-#
-#         if not isinstance(input_data, list) or len(input_data) != expected_length:
-#             return jsonify({"error": f"잘못된 입력입니다. {expected_length}일치 Open, High, Low, Close 데이터를 제공하세요."}), 400
-#
-#         input_data = np.array(input_data)  # 입력 데이터 배열 생성
-#         input_data = scaler.transform(input_data)  # 스케일러로 정규화
-#         input_data = np.expand_dims(input_data, axis=0)  # 배치 차원 추가
-#         input_data = torch.Tensor(input_data)
-#
-#         with torch.no_grad():
-#             prediction = model3(input_data).item()  # GRU 모델 예측 수행
-#
-#         prediction = scaler.inverse_transform([[0, 0, 0, prediction]])[0][3]  # 종가 기준으로 역정규화
-#
-#         return jsonify({"prediction": round(prediction, 2)})
-#
-#     except Exception as e:
-#         return jsonify({"error": "예측 중 오류가 발생했습니다.", "details": str(e)}), 500
-#
+@app.route('/predict3', methods=['POST'])
+def predict3():
+    try:
+        data = request.get_json()  # JSON 데이터에서 입력 값 추출
+        if not data or 'data' not in data or 'period' not in data:
+            return jsonify({"error": "요청에 데이터 또는 기간 정보가 포함되어 있지 않습니다."}), 400
+        input_data = data['data']
+        period = data['period']
+
+        period_days_map = {
+            '1d': 1,
+            '5d': 4,
+            '1mo': 17,
+            '3mo': 58,
+            '6mo': 116,
+            '1y': 239
+        }
+
+        if period not in period_days_map:
+            return jsonify({"error": "지원되지 않는 기간입니다."}), 400
+
+        expected_length = period_days_map[period]
+
+        if not isinstance(input_data, list) or len(input_data) != expected_length:
+            return jsonify({"error": f"잘못된 입력입니다. {expected_length}일치 Open, High, Low, Close 데이터를 제공하세요."}), 400
+
+        input_data = np.array(input_data)  # 입력 데이터 배열 생성
+        input_data = scaler.transform(input_data)  # 스케일러로 정규화
+        input_data = np.expand_dims(input_data, axis=0)  # 배치 차원 추가
+        input_data = torch.Tensor(input_data)
+
+        with torch.no_grad():
+            prediction = model3(input_data).item()  # GRU 모델 예측 수행
+
+        prediction = scaler.inverse_transform([[0, 0, 0, prediction]])[0][3]  # 종가 기준으로 역정규화
+
+        return jsonify({"prediction": round(prediction, 2)})
+
+    except Exception as e:
+        return jsonify({"error": "예측 중 오류가 발생했습니다.", "details": str(e)}), 500
+
 
 # 요청 일수에 따라 동적으로 받기
 @app.route('/get_stock_data', methods=['GET'])
