@@ -99,7 +99,7 @@ def load_model(model_path, vocab_size, embed_size, hidden_size, num_classes):
 # ✅ 모델 로드
 # model_path = "model/rnn_korean_model.pth"
 # model_path = "model/rnn_news_model.pth"
-model_path = "model/LSTM_news_model.pth"
+model_path = "model/lstm_news_model2.pth"
 
 model = load_model(model_path, len(word_dict), 10, 16, len(word_dict))
 
