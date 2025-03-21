@@ -2,28 +2,164 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>문장 예측기</title>
-    <script>
-        function predictSentence() {
-            let inputText = document.getElementById("sentenceInput").value;
-            fetch("/predict", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ sentence: inputText })
-            })
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById("result").innerHTML =
-                    `<h3>예측된 단어: ${data.predicted_word} (${data.confidence}%)</h3>`;
-            })
-            .catch(error => console.error("Error:", error));
-        }
-    </script>
+    <title>삼성 주가 예측</title>
 </head>
 <body>
-    <h1>문장 예측기</h1>
-    <input type="text" id="sentenceInput" placeholder="문장을 입력하세요">
-    <button onclick="predictSentence()">예측</button>
-    <div id="result"></div>
+
+<form id="periodForm">
+    <label><input type="radio" name="period" value="1d"> 1일</label><br>
+    <label><input type="radio" name="period" value="5d"> 5일(실제일수:4일)</label><br>
+    <label><input type="radio" name="period" value="1mo"> 1개월(실제일수:21일)</label><br>
+    <label><input type="radio" name="period" value="3mo"> 3개월(실제일수:60일)</label><br>
+    <label><input type="radio" name="period" value="6mo"> 6개월(실제일수:123일)</label><br>
+    <label><input type="radio" name="period" value="1y"> 1년(실제일수:243일)</label><br>
+    <button type="button" id="fetchDataButton">데이터 가져오기</button>
+</form>
+<!-- 수정 -->
+<button type="button" onclick="makePrediction('RNN')">RNN_예측하기_동적</button>
+<button type="button" onclick="makePrediction('LSTM')">LSTM_예측하기_동적</button>
+<button type="button" onclick="makePrediction('GRU')">GRU_예측하기_동적</button>
+
+
+<!-- 예측 결과 표시, 동적 표시 -->
+<h2 id="predictionResult1"></h2>
+<h2 id="predictionResult2"></h2>
+<h2 id="predictionResult3"></h2>
+<div id="dataContainer"></div>
+
+
+<script>
+
+    // 자동 채우기 다이나믹
+    document.getElementById('fetchDataButton').addEventListener('click', function () {
+        const selectedPeriod = document.querySelector('input[name="period"]:checked');
+        if (!selectedPeriod) {
+            alert('기간을 선택하세요.');
+            return;
+        }
+
+        const periodValue = selectedPeriod.value;
+
+        fetch(`/get_stock_data?period=${periodValue}`)
+            .then(response => response.json())
+            .then(data => {
+                const container = document.getElementById('dataContainer');
+                container.innerHTML = ''; // 기존 데이터 초기화
+
+                if (data.length === 0) {
+                    container.innerHTML = '<p>데이터가 없습니다.</p>';
+                    return;
+                }
+
+                // 데이터 표시
+                data.forEach((item, index) => {
+                    const dataBlock = document.createElement('div');
+                    dataBlock.innerHTML = `
+                        <h4>${index + 1}번째 날 (${item.Date})</h4>
+                         <p>시작가: <input type="text" name="open_${index + 1}" value="${item.Open}"></p>
+    <p>최소가: <input type="text" name="low_${index + 1}" value="${item.Low}"></p>
+    <p>최대가: <input type="text" name="high_${index + 1}" value="${item.High}"></p>
+    <p>종가: <input type="text" name="close_${index + 1}" value="${item.Close}"></p>
+    <hr>
+                    `;
+                    container.appendChild(dataBlock);
+                });
+            })
+            .catch(error => {
+                console.error('데이터 가져오는 중 오류 발생:', error);
+                alert('데이터를 가져오는 중 오류가 발생했습니다.');
+            });
+    });
+
+
+    // 동적 기간, 예측
+    // 동적 기간, 예측
+function makePrediction(modelType) {
+    // 선택된 기간 확인
+    const selectedPeriod = document.querySelector('input[name="period"]:checked');
+    if (!selectedPeriod) {
+        alert('기간을 선택하세요.');
+        return;
+    }
+
+    const periodValue = selectedPeriod.value;
+    console.log("periodValue : " + periodValue);
+
+    // 기간에 따라 데이터를 수집 (여기서는 최대 2일 예시로)
+    const data = [];
+    const days = getDaysBasedOnPeriod(periodValue); // 기간에 따라 일 수 결정
+    console.log("days : " + days);
+    if (days === 1) {
+        data.push([
+            parseFloat(document.querySelector(`[name="open_1"]`).value) || 0,
+            parseFloat(document.querySelector(`[name="low_1"]`).value) || 0,
+            parseFloat(document.querySelector(`[name="high_1"]`).value) || 0,
+            parseFloat(document.querySelector(`[name="close_1"]`).value) || 0
+        ]);
+    }
+
+    for (let i = 1; i <= days - 1; i++) {
+        data.push([
+            parseFloat(document.querySelector(`[name="open_${i}"]`).value) || 0,
+            parseFloat(document.querySelector(`[name="low_${i}"]`).value) || 0,
+            parseFloat(document.querySelector(`[name="high_${i}"]`).value) || 0,
+            parseFloat(document.querySelector(`[name="close_${i}"]`).value) || 0
+        ]);
+    }
+    console.log(data);
+
+    // 서버로 POST 요청 전송 - modelType에 따라 분기
+    const endpoint = modelType === 'RNN' ? '/predict1' : modelType === 'LSTM' ? '/predict2' : '/predict3';
+    fetch(endpoint, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ data: data, period: periodValue })
+    })
+        .then(response => response.json())
+        .then(result => {
+            const resultElementId = endpoint === '/predict1' ? 'predictionResult1' :
+                                    endpoint === '/predict2' ? 'predictionResult2' :
+                                    'predictionResult3';
+            if (result.error) {
+                document.getElementById(resultElementId).innerText = "오류: " + result.error;
+            } else {
+                const modelTypeMessage = endpoint === '/predict1' ? "RNN으로 예측된 종가: " :
+                                         endpoint === '/predict2' ? "LSTM으로 예측된 종가: " :
+                                         "GRU으로 예측된 종가: ";
+                document.getElementById(resultElementId).innerText = modelTypeMessage + result.prediction + " 원";
+            }
+        })
+        .catch(error => {
+            const resultElementId = endpoint === '/predict1' ? 'predictionResult1' :
+                                    endpoint === '/predict2' ? 'predictionResult2' :
+                                    'predictionResult3';
+            document.getElementById(resultElementId).innerText = "예측 요청 중 오류 발생";
+            console.error('Error:', error);
+        });
+}
+
+
+    // 기간에 따른 일 수를 결정하는 함수
+    function getDaysBasedOnPeriod(period) {
+        switch (period) {
+            case '1d':
+                return 1;
+            case '5d':
+                return 5;
+            case '1mo':
+                return 22; // 약 22일로 간주
+            case '3mo':
+                return 60; // 약 60일로 간주
+            case '6mo':
+                return 124; // 약 124일로 간주
+            case '1y':
+                return 244; // 약 244일로 간주
+            default:
+                return 1; // 기본값 (1일)
+        }
+    }
+</script>
 </body>
 </html>

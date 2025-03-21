@@ -1,169 +1,239 @@
-import os
-import torch
-import torch.nn as nn
-import torch.optim as optim
-import torch.nn.functional as F
-import torchvision.transforms as transforms
 from flask import Flask, request, jsonify, render_template
-from PIL import Image
-from torch.utils.data import Dataset, DataLoader
+import torch
+import numpy as np
+import torch.nn as nn
+import yfinance as yf
+from sklearn.preprocessing import MinMaxScaler
+import torch.serialization
 
-# Flask 앱 생성
 app = Flask(__name__)
 
-##############################################################
-import json
-import re
 
-# ✅ JSON 파일 읽기
-file_path = os.path.join(app.root_path, "트럼프_naver_news.json")
+# 모델 및 스케일러 로드
+class StockPredictorRNN(nn.Module):  # 간단한 RNN 기반 주식 예측 모델 정의
+    def __init__(self, input_size=4, hidden_size=64, num_layers=1, output_size=1):
+        super(StockPredictorRNN, self).__init__()
+        self.hidden_size = hidden_size
+        self.num_layers = num_layers
+        self.rnn = nn.RNN(input_size, hidden_size, num_layers, batch_first=True)
+        self.fc = nn.Linear(hidden_size, output_size)
 
-with open(file_path, "r", encoding="utf-8") as file:
-    news_data = json.load(file)  # JSON 데이터 로드
-##############################################################
-
-# ✅ 한국어 문장 예제 데이터셋
-corpus = [
-    "나는 너를 사랑해",
-    "나는 코딩을 좋아해",
-    "너는 나를 좋아해",
-    "너는 파이썬을 공부해",
-    "우리는 인공지능을 연구해",
-    "딥러닝은 재미있어",
-    "파이썬은 강력해",
-    "나는 자연어처리를 공부해",
-]
-
-
-##############################################################
-# ✅ JSON 데이터에서 'title' 값만 추출하고 한글만 남기기
-def extract_korean(text):
-    """문장에서 한글만 남기는 함수"""
-    return re.sub(r"[^ㄱ-ㅎ가-힣 ]+", " ", text)
-
-news_titles = [extract_korean(item["title"]) for item in news_data if "title" in item]
-
-# ✅ corpus에 한글만 남긴 뉴스 제목 추가
-corpus.extend(news_titles)
-
-# ✅ 결과 출력
-print("📌 최종 corpus 리스트:")
-print(corpus)
-##############################################################
-
-# ✅ 단어 사전 만들기
-word_list = list(set(" ".join(corpus).split()))
-word_dict = {w: i for i, w in enumerate(word_list)}
-idx_dict = {i: w for w, i in word_dict.items()}
-
-# ✅ 최대 문장 길이 설정
-max_len = max(len(s.split()) for s in corpus)
-
-# ✅ 모델 정의
-class RNNTextModel(nn.Module):
-    def __init__(self, vocab_size, embed_size, hidden_size, num_classes):
-        super(RNNTextModel, self).__init__()
-        self.embedding = nn.Embedding(vocab_size, embed_size)  # 단어 임베딩
-        self.rnn = nn.RNN(embed_size, hidden_size, batch_first=True)
-        self.fc = nn.Linear(hidden_size, num_classes)
-
-    def forward(self, x):
-        x = self.embedding(x)
-        out, _ = self.rnn(x)
-        out = self.fc(out[:, -1, :])  # 마지막 시점의 RNN 출력을 사용
-        return out
-
-# ✅ LSTM 모델 정의
-class LSTMTextModel(nn.Module):
-    def __init__(self, vocab_size, embed_size, hidden_size, num_classes):
-        super(LSTMTextModel, self).__init__()
-        self.embedding = nn.Embedding(vocab_size, embed_size)  # 단어 임베딩
-        self.lstm = nn.LSTM(embed_size, hidden_size, batch_first=True)
-        self.fc = nn.Linear(hidden_size, num_classes)
-
-    def forward(self, x):
-        x = self.embedding(x)
-        out, _ = self.lstm(x)
-        out = self.fc(out[:, -1, :])  # 마지막 시점의 LSTM 출력을 사용
-        return out
-
-# ✅ GRU 모델 정의
-class GRUTextModel(nn.Module):
-    def __init__(self, vocab_size, embed_size, hidden_size, num_classes):
-        super(GRUTextModel, self).__init__()
-        self.embedding = nn.Embedding(vocab_size, embed_size)  # 단어 임베딩
-        self.gru = nn.GRU(embed_size, hidden_size, batch_first=True)
-        self.fc = nn.Linear(hidden_size, num_classes)
-
-    def forward(self, x):
-        x = self.embedding(x)
-        out, _ = self.gru(x)
-        out = self.fc(out[:, -1, :])  # 마지막 시점의 GRU 출력을 사용
+    def forward(self, x):  # 순전파 정의
+        h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(x.device)  # 초기 은닉 상태 정의
+        out, _ = self.rnn(x, h0)  # RNN 레이어로 데이터 처리, out 모양 예시: [배치 크기, 시퀀스 길이, 은닉 크기] (예: [64, 60, 50])
+        out = self.fc(out[:, -1, :])  # 마지막 시퀀스의 은닉 상태로 최종 출력값 생성, out 모양 예시: [배치 크기, 1] (예: [64, 1])
         return out
 
 
-# ✅ 저장된 모델 불러오기 함수
-def load_model(model_path, vocab_size, embed_size, hidden_size, num_classes):
-    # model = RNNTextModel(vocab_size, embed_size, hidden_size, num_classes)
-    # model = LSTMTextModel(vocab_size, embed_size, hidden_size, num_classes)
-    model = GRUTextModel(vocab_size, embed_size, hidden_size, num_classes)
-    model.load_state_dict(torch.load(model_path, map_location=torch.device("cpu")))
-    model.eval()
-    return model
+# 모델 로드
+model = StockPredictorRNN()  # 모델 인스턴스 생성
+model.load_state_dict(torch.load('./model/samsungStock_250321.pth', map_location=torch.device('cpu')))  # 모델 가중치 로드
+model.eval()  # 평가 모드로 설정
+
+# 스케일러 로드
+scaler = torch.load('./model/scaler_250321.pth', map_location=torch.device('cpu'),weights_only=False)  # 데이터 스케일러 로드
 
 
-# ✅ 모델 로드
-# model_path = "model/rnn_korean_model.pth"
-# model_path = "model/rnn_news_model.pth"
-# model_path = "model/lstm_news_model2.pth"
-model_path = "model/GRU_news_model.pth"
-model = load_model(model_path, len(word_dict), 10, 16, len(word_dict))
+# ======================================================================================================================
+# 추가1: LSTM 모델 정의
+# class LSTMModel(nn.Module):  # PyTorch의 LSTM 모델 클래스 정의
+#     def __init__(self, input_size=4, hidden_size=128, output_size=1, num_layers=2, dropout=0.3):
+#         super(LSTMModel, self).__init__()  # nn.Module의 생성자 호출
+#         self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True, dropout=dropout)  # LSTM 레이어 정의
+#         self.fc = nn.Linear(hidden_size, output_size)  # 완전 연결 레이어 정의
+#         self.relu = nn.ReLU()  # 활성화 함수 ReLU 정의
+#
+#     def forward(self, x):  # 순전파 함수 정의
+#         lstm_out, _ = self.lstm(x)  # LSTM의 출력 계산, lstm_out 모양 예시: [배치 크기, 시퀀스 길이, 은닉 크기] (예: [64, 60, 128])
+#         last_out = lstm_out[:, -1, :]  # 마지막 시퀀스의 출력을 선택, last_out 모양 예시: [배치 크기, 은닉 크기] (예: [64, 128])
+#         out = self.fc(self.relu(last_out))  # ReLU 활성화 후 완전 연결 레이어 통과, out 모양 예시: [배치 크기, 출력 크기] (예: [64, 1])
+#         return out
 
 
-# ✅ 문장 예측 함수
-def predict_next_word(sentence):
-    if model is None:
-        return "", 0.0
+# LSTM 모델 로드
+# model2 = LSTMModel()  # LSTM 모델 인스턴스 생성
+# model2.load_state_dict(
+#     torch.load('./model/7-samsungStock_LSTM_60days_basic.pth', map_location=torch.device('cpu')))  # 모델 가중치 로드
+# model2.eval()  # 평가 모드로 설정
+# scaler = torch.load('./model/7-scaler_LSTM_60days_basic.pth')  # 스케일러 로드
+#
 
-    model.eval()  # ✅ 평가 모드 설정
-    words = sentence.strip().split()  # ✅ 불필요한 공백 제거
-    input_seq = [word_dict[w] for w in words if w in word_dict]
-
-    # ✅ 패딩 추가 (길이를 맞추기 위해)
-    input_padded = input_seq + [0] * (max_len - len(input_seq))
-    device = next(model.parameters()).device  # ✅ 모델이 위치한 장치 확인
-    input_tensor = torch.tensor([input_padded], dtype=torch.long).to(device)
-
-    # ✅ 모델 예측
-    with torch.no_grad():
-        output = model(input_tensor)
-        probabilities = F.softmax(output[0], dim=0)
-        predicted_idx = torch.argmax(probabilities).item()
-        confidence = probabilities[predicted_idx].item()
-
-    predicted_word = idx_dict[predicted_idx]
-    return predicted_word, confidence
+# ======================================================================================================================
+# 추가2: GRU 모델 정의
+# class GRUModel(nn.Module):  # PyTorch를 사용하여 GRU(Gated Recurrent Unit) 모델을 정의합니다
+#     def __init__(self, input_size=4, hidden_size=64, num_layers=1, output_size=1):
+#         super(GRUModel, self).__init__()  # nn.Module의 생성자 호출
+#         self.gru = nn.GRU(input_size, hidden_size, num_layers, batch_first=True)  # GRU 레이어 정의
+#         self.fc = nn.Linear(hidden_size, output_size)  # 완전 연결 레이어 정의
+#
+#     def forward(self, x):  # 순전파 정의
+#         out, _ = self.gru(x)  # GRU 레이어를 통해 입력 처리, out 모양 예시: [배치 크기, 시퀀스 길이, 은닉 크기] (예: [64, 60, 64])
+#         out = self.fc(out[:, -1])  # 마지막 시퀀스 은닉 상태로 선형 레이어에 전달, out 모양 예시: [배치 크기, 출력 크기] (예: [64, 1])
+#         return out
 
 
-# ✅ 웹페이지 렌더링
-@app.route("/")
-def index():
-    return render_template("index.html")
+# GRU 모델 로드
+# model3 = GRUModel()  # GRU 모델 인스턴스 생성
+# model3.load_state_dict(torch.load('./model/7-samsungStock_GRU.pth', map_location=torch.device('cpu')))  # 모델 가중치 로드
+# model3.eval()  # 평가 모드로 설정
+# scaler = torch.load('./model/7-scaler_GRU.pth')  # 스케일러 로드
 
 
-# ✅ 예측 API
-@app.route("/predict", methods=["POST"])
-def predict():
-    data = request.get_json()
-    sentence = data.get("sentence", "")
-    if not sentence:
-        return jsonify({"error": "No sentence provided"}), 400
-
-    predicted_word, confidence = predict_next_word(sentence)
-    return jsonify({"predicted_word": predicted_word, "confidence": round(confidence * 100, 2)})
+@app.route('/')
+def home():  # 홈 페이지 라우트 설정
+    return render_template('index.html')
 
 
-# ✅ Flask 서버 실행
-if __name__ == "__main__":
-    app.run(debug=True)
+# 예측 엔드포인트
+@app.route('/predict1', methods=['POST'])
+def predict1():  # RNN 모델 예측 엔드포인트
+    try:
+        data = request.get_json()  # JSON 데이터에서 입력 값 추출
+        if not data or 'data' not in data or 'period' not in data:  # 데이터 검증
+            return jsonify({"error": "요청에 데이터 또는 기간 정보가 포함되어 있지 않습니다."}), 400
+        input_data = data['data']
+        period = data['period']
 
+        period_days_map = {
+            '1d': 1,
+            '5d': 4,
+            '1mo': 17,
+            '3mo': 58,
+            '6mo': 116,
+            '1y': 239
+        }
+
+        if period not in period_days_map:
+            return jsonify({"error": "지원되지 않는 기간입니다."}), 400
+
+        expected_length = period_days_map[period]
+
+        if not isinstance(input_data, list) or len(input_data) != expected_length:
+            return jsonify({"error": f"잘못된 입력입니다. {expected_length}일치 Open, High, Low, Close 데이터를 제공하세요."}), 400
+
+        input_data = np.array(input_data)  # 입력 데이터 배열 생성
+        input_data = scaler.transform(input_data)  # 스케일러로 정규화
+        input_data = np.expand_dims(input_data, axis=0)  # 배치 차원 추가
+        input_data = torch.Tensor(input_data)
+
+        with torch.no_grad():
+            prediction = model(input_data).item()  # RNN 모델 예측 수행
+
+        prediction = scaler.inverse_transform([[0, 0, 0, prediction]])[0][3]  # 종가 기준으로 역정규화
+
+        return jsonify({"prediction": round(prediction, 2)})
+
+    except Exception as e:
+        return jsonify({"error": "예측 중 오류가 발생했습니다.", "details": str(e)}), 500
+
+
+# LSTM 예측 엔드포인트
+# @app.route('/predict2', methods=['POST'])
+# def predict2():
+#     try:
+#         data = request.get_json()  # JSON 데이터에서 입력 값 추출
+#         if not data or 'data' not in data or 'period' not in data:
+#             return jsonify({"error": "요청에 데이터 또는 기간 정보가 포함되어 있지 않습니다."}), 400
+#         input_data = data['data']
+#         period = data['period']
+#
+#         period_days_map = {
+#             '1d': 1,
+#             '5d': 4,
+#             '1mo': 17,
+#             '3mo': 58,
+#             '6mo': 116,
+#             '1y': 239
+#         }
+#
+#         if period not in period_days_map:
+#             return jsonify({"error": "지원되지 않는 기간입니다."}), 400
+#
+#         expected_length = period_days_map[period]
+#
+#         if not isinstance(input_data, list) or len(input_data) != expected_length:
+#             return jsonify({"error": f"잘못된 입력입니다. {expected_length}일치 Open, High, Low, Close 데이터를 제공하세요."}), 400
+#
+#         input_data = np.array(input_data)  # 입력 데이터 배열 생성
+#         input_data = scaler.transform(input_data)  # 스케일러로 정규화
+#         input_data = np.expand_dims(input_data, axis=0)  # 배치 차원 추가
+#         input_data = torch.Tensor(input_data)
+#
+#         with torch.no_grad():
+#             prediction = model2(input_data).item()  # LSTM 모델 예측 수행
+#
+#         prediction = scaler.inverse_transform([[0, 0, 0, prediction]])[0][3]  # 종가 기준으로 역정규화
+#
+#         return jsonify({"prediction": round(prediction, 2)})
+#
+#     except Exception as e:
+#         return jsonify({"error": "예측 중 오류가 발생했습니다.", "details": str(e)}), 500
+
+
+# GRU 예측 엔드포인트
+# @app.route('/predict3', methods=['POST'])
+# def predict3():
+#     try:
+#         data = request.get_json()  # JSON 데이터에서 입력 값 추출
+#         if not data or 'data' not in data or 'period' not in data:
+#             return jsonify({"error": "요청에 데이터 또는 기간 정보가 포함되어 있지 않습니다."}), 400
+#         input_data = data['data']
+#         period = data['period']
+#
+#         period_days_map = {
+#             '1d': 1,
+#             '5d': 4,
+#             '1mo': 17,
+#             '3mo': 58,
+#             '6mo': 116,
+#             '1y': 239
+#         }
+#
+#         if period not in period_days_map:
+#             return jsonify({"error": "지원되지 않는 기간입니다."}), 400
+#
+#         expected_length = period_days_map[period]
+#
+#         if not isinstance(input_data, list) or len(input_data) != expected_length:
+#             return jsonify({"error": f"잘못된 입력입니다. {expected_length}일치 Open, High, Low, Close 데이터를 제공하세요."}), 400
+#
+#         input_data = np.array(input_data)  # 입력 데이터 배열 생성
+#         input_data = scaler.transform(input_data)  # 스케일러로 정규화
+#         input_data = np.expand_dims(input_data, axis=0)  # 배치 차원 추가
+#         input_data = torch.Tensor(input_data)
+#
+#         with torch.no_grad():
+#             prediction = model3(input_data).item()  # GRU 모델 예측 수행
+#
+#         prediction = scaler.inverse_transform([[0, 0, 0, prediction]])[0][3]  # 종가 기준으로 역정규화
+#
+#         return jsonify({"prediction": round(prediction, 2)})
+#
+#     except Exception as e:
+#         return jsonify({"error": "예측 중 오류가 발생했습니다.", "details": str(e)}), 500
+#
+
+# 요청 일수에 따라 동적으로 받기
+@app.route('/get_stock_data', methods=['GET'])
+def get_stock_data():
+    period = request.args.get('period', default='5d')  # 기본 요청 기간 설정
+    ticker = '005930.KS'  # 삼성전자 종목 코드
+    data = yf.download(ticker, period=period, interval='1d')  # 지정된 기간 동안 주식 데이터 가져오기
+
+    data.columns = data.columns.get_level_values(0)  # MultiIndex가 설정된 경우 열 이름 단순화
+
+    if period == '1d':
+        data_subset = data[['Open', 'Low', 'High', 'Close']]  # 1일의 경우 데이터를 그대로 반환
+    else:
+        data_subset = data.iloc[:-1][['Open', 'Low', 'High', 'Close']]  # 나머지 기간은 최근 1일 제외하고 반환
+
+    data_subset = data_subset.reset_index()  # Date 인덱스를 컬럼으로 변환
+    data_subset['Date'] = data_subset['Date'].astype(str)  # Date를 문자열로 변환
+
+    stock_data = data_subset.to_dict(orient='records')  # JSON으로 변환 가능한 딕셔너리로 변환
+
+    return jsonify(stock_data)
+
+
+if __name__ == '__main__':
+    app.run()

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>문장 예측기</title>
+    <script>
+        function predictSentence() {
+            let inputText = document.getElementById("sentenceInput").value;
+            fetch("/predict", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ sentence: inputText })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("result").innerHTML =
+                    `<h3>예측된 단어: ${data.predicted_word} (${data.confidence}%)</h3>`;
+            })
+            .catch(error => console.error("Error:", error));
+        }
+    </script>
+</head>
+<body>
+    <h1>문장 예측기</h1>
+    <input type="text" id="sentenceInput" placeholder="문장을 입력하세요">
+    <button onclick="predictSentence()">예측</button>
+    <div id="result"></div>
+</body>
+</html>
