@@ -2,53 +2,28 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>Hammer / Nipper 분류기</title>
+    <title>문장 예측기</title>
     <script>
-        function uploadImage() {
-            let formData = new FormData();
-            let imageFile = document.getElementById("imageInput").files[0];
-            formData.append("image", imageFile);
-
-            fetch("/classify", {
+        function predictSentence() {
+            let inputText = document.getElementById("sentenceInput").value;
+            fetch("/predict", {
                 method: "POST",
-                body: formData
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ sentence: inputText })
             })
             .then(response => response.json())
             .then(data => {
                 document.getElementById("result").innerHTML =
-                    `<h3>결과: ${data.class} (${data.confidence}%)</h3>`;
-            })
-            .catch(error => console.error("Error:", error));
-        }
-    </script>
-     <script>
-        function uploadImage2() {
-            let formData = new FormData();
-            let imageFile = document.getElementById("imageInput2").files[0];
-            formData.append("image", imageFile);
-
-            fetch("/classify2", {
-                method: "POST",
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById("result2").innerHTML =
-                    `<h3>결과: ${data.class} (${data.confidence}%)</h3>`;
+                    `<h3>예측된 단어: ${data.predicted_word} (${data.confidence}%)</h3>`;
             })
             .catch(error => console.error("Error:", error));
         }
     </script>
 </head>
 <body>
-    <h1>Hammer / Nipper 분류기/CNN</h1>
-    <input type="file" id="imageInput">
-    <button onclick="uploadImage()">업로드 및 분석</button>
+    <h1>문장 예측기</h1>
+    <input type="text" id="sentenceInput" placeholder="문장을 입력하세요">
+    <button onclick="predictSentence()">예측</button>
     <div id="result"></div>
-
- <h1>Hammer / Nipper 분류기2/ ResNet50</h1>
-    <input type="file" id="imageInput2">
-    <button onclick="uploadImage2()">업로드 및 분석</button>
-    <div id="result2"></div>
 </body>
 </html>

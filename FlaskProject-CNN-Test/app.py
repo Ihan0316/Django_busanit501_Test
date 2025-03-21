@@ -1,98 +1,98 @@
 import os
 import torch
+import torch.nn as nn
+import torch.optim as optim
+import torch.nn.functional as F
 import torchvision.transforms as transforms
 from flask import Flask, request, jsonify, render_template
 from PIL import Image
-from model import load_model, load_model2
 
 # Flask 앱 생성
 app = Flask(__name__)
-app.config["UPLOAD_FOLDER"] = "static/uploads"
 
-# CNN 모델 로드
-model = load_model()
+# ✅ 한국어 문장 예제 데이터셋
+corpus = [
+    "나는 너를 사랑해",
+    "나는 코딩을 좋아해",
+    "너는 나를 좋아해",
+    "너는 파이썬을 공부해",
+    "우리는 인공지능을 연구해",
+    "딥러닝은 재미있어",
+    "파이썬은 강력해",
+    "나는 자연어처리를 공부해",
+]
 
-# ResNet50 모델 로드
-model2 = load_model2()
-
-# 클래스 이름
-class_names = ["Hammer", "Nipper"]
-
-# 이미지 전처리 함수
-def transform_image(image):
-    transform = transforms.Compose([
-        transforms.Resize((224, 224)),
-        transforms.ToTensor(),
-    ])
-    return transform(image).unsqueeze(0)  # 배치 차원 추가
-
-# 이미지 전처리 함수
-def transform_image2(image):
-    transform = transforms.Compose([
-        transforms.Resize((224, 224)),
-        transforms.ToTensor(),
-		transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-    ])
-    return transform(image).unsqueeze(0)  # 배치 차원 추가
+# ✅ 단어 사전 만들기
+word_list = list(set(" ".join(corpus).split()))
+word_dict = {w: i for i, w in enumerate(word_list)}
+idx_dict = {i: w for w, i in word_dict.items()}
 
 
-# 웹페이지 렌더링
+# ✅ 모델 정의
+class RNNTextModel(nn.Module):
+    def __init__(self, vocab_size, embed_size, hidden_size, num_classes):
+        super(RNNTextModel, self).__init__()
+        self.embedding = nn.Embedding(vocab_size, embed_size)  # 단어 임베딩
+        self.rnn = nn.RNN(embed_size, hidden_size, batch_first=True)
+        self.fc = nn.Linear(hidden_size, num_classes)
+
+    def forward(self, x):
+        x = self.embedding(x)
+        out, _ = self.rnn(x)
+        out = self.fc(out[:, -1, :])  # 마지막 시점의 RNN 출력을 사용
+        return out
+
+
+# ✅ 저장된 모델 불러오기 함수
+def load_model(model_path, vocab_size, embed_size, hidden_size, num_classes):
+    model = RNNTextModel(vocab_size, embed_size, hidden_size, num_classes)
+    model.load_state_dict(torch.load(model_path, map_location=torch.device("cpu")))
+    model.eval()
+    return model
+
+
+# ✅ 모델 로드
+model_path = "model/rnn_korean_model.pth"
+model = load_model(model_path, len(word_dict), 10, 16, len(word_dict))
+
+
+# ✅ 문장 예측 함수
+def predict_next_word(sentence):
+    words = sentence.split()
+    input_seq = [word_dict[w] for w in words if w in word_dict]
+    max_len = max(len(seq) for seq in [[word_dict[w] for w in s.split()] for s in corpus])
+    input_padded = input_seq + [0] * (max_len - len(input_seq))
+    input_tensor = torch.tensor([input_padded], dtype=torch.long)
+
+    with torch.no_grad():
+        output = model(input_tensor)
+        probabilities = F.softmax(output[0], dim=0)
+        predicted_idx = torch.argmax(probabilities).item()
+        confidence = probabilities[predicted_idx].item()
+
+    predicted_word = idx_dict[predicted_idx]
+    return predicted_word, confidence
+
+
+# ✅ 웹페이지 렌더링
 @app.route("/")
 def index():
     return render_template("index.html")
 
-# 이미지 업로드 및 분류 API
-@app.route("/classify", methods=["POST"])
-def classify_image():
-    if "image" not in request.files:
-        return jsonify({"error": "No image file"}), 400
 
-    image_file = request.files["image"]
-    if image_file.filename == "":
-        return jsonify({"error": "No selected file"}), 400
+# ✅ 예측 API
+@app.route("/predict", methods=["POST"])
+def predict():
+    data = request.get_json()
+    sentence = data.get("sentence", "")
+    if not sentence:
+        return jsonify({"error": "No sentence provided"}), 400
 
-    image = Image.open(image_file)
-    image = transform_image(image)
+    predicted_word, confidence = predict_next_word(sentence)
+    return jsonify({"predicted_word": predicted_word, "confidence": round(confidence * 100, 2)})
 
-    # 모델 예측
-    with torch.no_grad():
-        output = model(image)
-        probabilities = torch.nn.functional.softmax(output[0], dim=0)
-        predicted_idx = torch.argmax(probabilities).item()
-        confidence = probabilities[predicted_idx].item()
 
-    response_data = {
-        "class": class_names[predicted_idx],
-        "confidence": round(confidence * 100, 2),
-    }
-    return jsonify(response_data)
-
-# 이미지 업로드 및 분류 API
-@app.route("/classify2", methods=["POST"])
-def classify_image2():
-    if "image" not in request.files:
-        return jsonify({"error": "No image file"}), 400
-
-    image_file = request.files["image"]
-    if image_file.filename == "":
-        return jsonify({"error": "No selected file"}), 400
-
-    image = Image.open(image_file)
-    image = transform_image2(image)
-
-    # 모델 예측
-    with torch.no_grad():
-        output = model2(image)
-        probabilities = torch.nn.functional.softmax(output[0], dim=0)
-        predicted_idx = torch.argmax(probabilities).item()
-        confidence = probabilities[predicted_idx].item()
-
-    response_data = {
-        "class": class_names[predicted_idx],
-        "confidence": round(confidence * 100, 2),
-    }
-    return jsonify(response_data)
-
-# Flask 서버 실행
+# ✅ Flask 서버 실행
 if __name__ == "__main__":
     app.run(debug=True)
+
