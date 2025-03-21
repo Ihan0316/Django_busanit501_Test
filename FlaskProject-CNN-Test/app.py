@@ -87,10 +87,26 @@ class LSTMTextModel(nn.Module):
         out = self.fc(out[:, -1, :])  # 마지막 시점의 LSTM 출력을 사용
         return out
 
+# ✅ GRU 모델 정의
+class GRUTextModel(nn.Module):
+    def __init__(self, vocab_size, embed_size, hidden_size, num_classes):
+        super(GRUTextModel, self).__init__()
+        self.embedding = nn.Embedding(vocab_size, embed_size)  # 단어 임베딩
+        self.gru = nn.GRU(embed_size, hidden_size, batch_first=True)
+        self.fc = nn.Linear(hidden_size, num_classes)
+
+    def forward(self, x):
+        x = self.embedding(x)
+        out, _ = self.gru(x)
+        out = self.fc(out[:, -1, :])  # 마지막 시점의 GRU 출력을 사용
+        return out
+
+
 # ✅ 저장된 모델 불러오기 함수
 def load_model(model_path, vocab_size, embed_size, hidden_size, num_classes):
     # model = RNNTextModel(vocab_size, embed_size, hidden_size, num_classes)
-    model = LSTMTextModel(vocab_size, embed_size, hidden_size, num_classes)
+    # model = LSTMTextModel(vocab_size, embed_size, hidden_size, num_classes)
+    model = GRUTextModel(vocab_size, embed_size, hidden_size, num_classes)
     model.load_state_dict(torch.load(model_path, map_location=torch.device("cpu")))
     model.eval()
     return model
@@ -99,8 +115,8 @@ def load_model(model_path, vocab_size, embed_size, hidden_size, num_classes):
 # ✅ 모델 로드
 # model_path = "model/rnn_korean_model.pth"
 # model_path = "model/rnn_news_model.pth"
-model_path = "model/lstm_news_model2.pth"
-
+# model_path = "model/lstm_news_model2.pth"
+model_path = "model/GRU_news_model.pth"
 model = load_model(model_path, len(word_dict), 10, 16, len(word_dict))
 
 
