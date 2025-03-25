@@ -2,164 +2,160 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>삼성 주가 예측</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flask Server - Unified Image Classification</title>
+
+    <!-- ✅ CSS 파일 연결 -->
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.js"></script>
 </head>
 <body>
 
-<form id="periodForm">
-    <label><input type="radio" name="period" value="1d"> 1일</label><br>
-    <label><input type="radio" name="period" value="5d"> 5일(실제일수:4일)</label><br>
-    <label><input type="radio" name="period" value="1mo"> 1개월(실제일수:21일)</label><br>
-    <label><input type="radio" name="period" value="3mo"> 3개월(실제일수:60일)</label><br>
-    <label><input type="radio" name="period" value="6mo"> 6개월(실제일수:123일)</label><br>
-    <label><input type="radio" name="period" value="1y"> 1년(실제일수:243일)</label><br>
-    <button type="button" id="fetchDataButton">데이터 가져오기</button>
-</form>
-<!-- 수정 -->
-<button type="button" onclick="makePrediction('RNN')">RNN_예측하기_동적</button>
-<button type="button" onclick="makePrediction('LSTM')">LSTM_예측하기_동적</button>
-<button type="button" onclick="makePrediction('GRU')">GRU_예측하기_동적</button>
+    <h1>Flask Server - Unified Image Classification</h1>
+    <p>팀별 모델과 YOLOv8을 사용하여 이미지 분류 및 객체 탐지를 수행할 수 있습니다.</p>
 
+    <!-- 🔹 공통 파일 업로드 UI -->
+    <div class="upload-section">
+        <h3>Upload File</h3>
+        <form id="uploadForm" enctype="multipart/form-data">
+            <input type="file" id="fileInput"  required>
+            <button type="submit">Upload</button>
+        </form>
+        <div id="loading" style="display: none;">Processing your file... Please wait!</div>
+        <div id="result"></div>
+    </div>
 
-<!-- 예측 결과 표시, 동적 표시 -->
-<h2 id="predictionResult1"></h2>
-<h2 id="predictionResult2"></h2>
-<h2 id="predictionResult3"></h2>
-<div id="dataContainer"></div>
+    <!-- 🔹 모델 선택 UI -->
+    <div class="upload-section">
+        <h3>Select Model</h3>
+        <button onclick="uploadFile('team1')">Predict (Team1 - 동물)</button>
+        <button onclick="uploadFile('team2')">Predict (Team2 - 재활용)</button>
+        <button onclick="uploadFile('team3')">Predict (Team3 - 공구)</button>
+        <button onclick="uploadFile('yolo')">Predict (YOLOv8 - 객체 탐지)</button>
+    </div>
 
+    <!-- 🔹 업로드된 파일 미리보기 -->
+    <div class="preview-container">
+        <img id="preview-image" src="" style="display: none; max-width: 300px; margin-top: 10px; border: 1px solid #ddd;">
+    </div>
 
-<script>
+    <script>
+        const form = document.getElementById('uploadForm');
+        const fileInput = document.getElementById('fileInput');
+        const loading = document.getElementById('loading');
+        const result = document.getElementById('result');
+        const previewImage = document.getElementById('preview-image');
+        const socket = io();
 
-    // 자동 채우기 다이나믹
-    document.getElementById('fetchDataButton').addEventListener('click', function () {
-        const selectedPeriod = document.querySelector('input[name="period"]:checked');
-        if (!selectedPeriod) {
-            alert('기간을 선택하세요.');
-            return;
-        }
+        let uploadedFile = null; // 업로드된 파일 저장
 
-        const periodValue = selectedPeriod.value;
+        // 🔹 파일 업로드 처리
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
 
-        fetch(`/get_stock_data?period=${periodValue}`)
-            .then(response => response.json())
-            .then(data => {
-                const container = document.getElementById('dataContainer');
-                container.innerHTML = ''; // 기존 데이터 초기화
-
-                if (data.length === 0) {
-                    container.innerHTML = '<p>데이터가 없습니다.</p>';
-                    return;
-                }
-
-                // 데이터 표시
-                data.forEach((item, index) => {
-                    const dataBlock = document.createElement('div');
-                    dataBlock.innerHTML = `
-                        <h4>${index + 1}번째 날 (${item.Date})</h4>
-                         <p>시작가: <input type="text" name="open_${index + 1}" value="${item.Open}"></p>
-    <p>최소가: <input type="text" name="low_${index + 1}" value="${item.Low}"></p>
-    <p>최대가: <input type="text" name="high_${index + 1}" value="${item.High}"></p>
-    <p>종가: <input type="text" name="close_${index + 1}" value="${item.Close}"></p>
-    <hr>
-                    `;
-                    container.appendChild(dataBlock);
-                });
-            })
-            .catch(error => {
-                console.error('데이터 가져오는 중 오류 발생:', error);
-                alert('데이터를 가져오는 중 오류가 발생했습니다.');
-            });
-    });
-
-
-    // 동적 기간, 예측
-    // 동적 기간, 예측
-function makePrediction(modelType) {
-    // 선택된 기간 확인
-    const selectedPeriod = document.querySelector('input[name="period"]:checked');
-    if (!selectedPeriod) {
-        alert('기간을 선택하세요.');
-        return;
-    }
-
-    const periodValue = selectedPeriod.value;
-    console.log("periodValue : " + periodValue);
-
-    // 기간에 따라 데이터를 수집 (여기서는 최대 2일 예시로)
-    const data = [];
-    const days = getDaysBasedOnPeriod(periodValue); // 기간에 따라 일 수 결정
-    console.log("days : " + days);
-    if (days === 1) {
-        data.push([
-            parseFloat(document.querySelector(`[name="open_1"]`).value) || 0,
-            parseFloat(document.querySelector(`[name="low_1"]`).value) || 0,
-            parseFloat(document.querySelector(`[name="high_1"]`).value) || 0,
-            parseFloat(document.querySelector(`[name="close_1"]`).value) || 0
-        ]);
-    }
-
-    for (let i = 1; i <= days - 1; i++) {
-        data.push([
-            parseFloat(document.querySelector(`[name="open_${i}"]`).value) || 0,
-            parseFloat(document.querySelector(`[name="low_${i}"]`).value) || 0,
-            parseFloat(document.querySelector(`[name="high_${i}"]`).value) || 0,
-            parseFloat(document.querySelector(`[name="close_${i}"]`).value) || 0
-        ]);
-    }
-    console.log(data);
-
-    // 서버로 POST 요청 전송 - modelType에 따라 분기
-    const endpoint = modelType === 'RNN' ? '/predict1' : modelType === 'LSTM' ? '/predict2' : '/predict3';
-    fetch(endpoint, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ data: data, period: periodValue })
-    })
-        .then(response => response.json())
-        .then(result => {
-            const resultElementId = endpoint === '/predict1' ? 'predictionResult1' :
-                                    endpoint === '/predict2' ? 'predictionResult2' :
-                                    'predictionResult3';
-            if (result.error) {
-                document.getElementById(resultElementId).innerText = "오류: " + result.error;
-            } else {
-                const modelTypeMessage = endpoint === '/predict1' ? "RNN으로 예측된 종가: " :
-                                         endpoint === '/predict2' ? "LSTM으로 예측된 종가: " :
-                                         "GRU으로 예측된 종가: ";
-                document.getElementById(resultElementId).innerText = modelTypeMessage + result.prediction + " 원";
+            if (fileInput.files.length === 0) {
+                alert("파일을 선택하세요.");
+                return;
             }
-        })
-        .catch(error => {
-            const resultElementId = endpoint === '/predict1' ? 'predictionResult1' :
-                                    endpoint === '/predict2' ? 'predictionResult2' :
-                                    'predictionResult3';
-            document.getElementById(resultElementId).innerText = "예측 요청 중 오류 발생";
-            console.error('Error:', error);
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            uploadedFile = fileInput.files[0]; // 파일 저장
+
+            loading.style.display = 'block';
+            result.innerHTML = '';
+
+            const response = await fetch('/upload', {
+                method: 'POST',
+                body: formData,
+            });
+
+            const data = await response.json();
+
+            if (data.error) {
+                alert(data.error);
+                loading.style.display = 'none';
+            } else {
+                console.log("File uploaded successfully.");
+                loading.innerHTML = 'File uploaded successfully.'
+
+            }
         });
-}
 
 
-    // 기간에 따른 일 수를 결정하는 함수
-    function getDaysBasedOnPeriod(period) {
-        switch (period) {
-            case '1d':
-                return 1;
-            case '5d':
-                return 5;
-            case '1mo':
-                return 22; // 약 22일로 간주
-            case '3mo':
-                return 60; // 약 60일로 간주
-            case '6mo':
-                return 124; // 약 124일로 간주
-            case '1y':
-                return 244; // 약 244일로 간주
-            default:
-                return 1; // 기본값 (1일)
+
+        // 🔹 이미지 분류 모델 예측 요청 (AJAX)
+        function uploadFile(modelType) {
+            if (!uploadedFile) {
+                alert("먼저 파일을 업로드하세요.");
+                return;
+            }
+
+            let formData = new FormData();
+            formData.append("image", uploadedFile);
+
+            let endpoint = modelType === "yolo" ? "/predict/yolo" : `/predict/${modelType}`;
+
+            $.ajax({
+                url: endpoint,
+                type: "POST",
+                data: formData,
+                contentType: false,
+                processData: false,
+                beforeSend: function() {
+                    loading.style.display = 'block';
+                    result.innerHTML = '';
+                },
+                success: function(response) {
+                    console.log(response);
+                    loading.style.display = 'none';
+
+                    if (modelType === "yolo") {
+                        console.log("(modelTyp : yolo...")
+                        console.log("(modelTyp : response.url...",response.url)
+                        // YOLO 모델은 처리된 이미지 URL을 반환
+                        result.innerHTML = `<p>처리된 이미지 결과:</p><a href="${response.url}" target="_blank">결과 보기</a>`;
+                        previewImage.src = response.url;
+                        previewImage.style.display = "block";
+                    } else {
+                        // 이미지 분류 모델 결과 표시
+                        result.innerHTML = `
+                            <p>파일명: ${response.filename}</p>
+                            <p>예측 결과: <strong>${response.predicted_class}</strong></p>
+                            <p>정확도: ${response.confidence}</p>
+                        `;
+                    }
+                },
+                error: function(error) {
+                    console.error("Error:", error);
+                    result.innerHTML = "<p style='color:red;'>예측 실패</p>";
+                    loading.style.display = 'none';
+                }
+            });
+
+            // 이미지 미리보기
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                previewImage.src = e.target.result;
+                previewImage.style.display = "block";
+            };
+            reader.readAsDataURL(uploadedFile);
         }
-    }
-</script>
+
+         // 🔹 YOLOv8 비동기 처리 결과 수신 (WebSocket)
+        socket.on('file_processed', (data) => {
+            loading.style.display = 'none';
+            result.innerHTML = `
+                <h2>Processed File</h2>
+                ${data.url.endsWith('.mp4')
+                    ? `<a href="${data.url}" download>Download Video</a>`
+                    : `<div><a href="${data.url}" download>Download Image</a></div><img src="${data.url}" alt="Processed Image" style="max-width: 100%; height: auto;">`
+                }
+            `;
+        });
+    </script>
+
 </body>
 </html>
