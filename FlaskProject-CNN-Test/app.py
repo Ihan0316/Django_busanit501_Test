@@ -31,7 +31,8 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 # ✅ YOLO 모델 로드
-yolo_model = YOLO("model/best-busanit501-aqua.pt")
+# yolo_model = YOLO("model/best-busanit501-aqua.pt")
+yolo_model = YOLO("model/best-apple-test.pt")
 # app.config['SERVER_NAME'] = '10.100.201.87:5000'  # Flask 서버 주소와 포트 설정
 
 # ✅ 결과 저장 폴더 설정
